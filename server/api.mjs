@@ -55,15 +55,16 @@ export async function api(req,env){
    if(me.area!=='village'||!bench||Math.hypot(me.x-bench.x,me.z-bench.z)>5)return json({error:'Hãy đi lại gần chiếc ghế trước nhé.'},400);
    if(await one('SELECT id FROM users WHERE area=? AND seat=? AND seen>? AND id!=?','village',bench.id,now-25000,me.id))return json({error:'Ghế này có bạn ngồi rồi. Chọn ghế khác nhé.'},409);
    await run('UPDATE users SET seat=?,action=?,action_at=?,x=?,z=?,facing=?,position_at=?,seen=? WHERE id=?',bench.id,'sit',now,bench.x,bench.z,bench.facing,now,now,me.id);
-   return json({ok:true,x:bench.x,z:bench.z,facing:bench.facing});
+   return json({ok:true,x:bench.x,z:bench.z,facing:bench.facing,user:publicUser(await one('SELECT * FROM users WHERE id=?',me.id))});
   }
   if(!GESTURES.some(g=>g.id===body.action))return json({error:'Động tác không tồn tại.'},400);
   const standing=body.action==='stand';
   if(!standing&&now-me.action_at<700)return json({error:'Chờ một chút để đổi động tác nhé.'},429);
   // Step out in front of a bench when standing, so its collision box cannot trap the player.
-  const x=standing&&me.seat?me.x+Math.sin(me.facing)*1.8:me.x,z=standing&&me.seat?me.z+Math.cos(me.facing)*1.8:me.z;
+  const bench=standing?BENCHES.find(b=>b.id===me.seat):null;
+  const x=bench?bench.x+Math.sin(bench.facing)*1.8:me.x,z=bench?bench.z+Math.cos(bench.facing)*1.8:me.z;
   await run('UPDATE users SET action=?,action_at=?,x=?,z=?,seat=?,position_at=? WHERE id=?',standing?'':body.action,now,x,z,standing?'':me.seat,now,me.id);
-  return json({ok:true,x,z,facing:me.facing});
+  return json({ok:true,x,z,facing:me.facing,user:publicUser(await one('SELECT * FROM users WHERE id=?',me.id))});
  }
  if(route==='buy'&&req.method==='POST'){
   const shop=SHOPS.find(s=>s.id===body.shop),item=ITEMS[body.item];

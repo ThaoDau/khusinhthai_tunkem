@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {buildLandscape} from './landscape.mjs';
 import {poseCharacter} from './character-life.mjs';
+import {nearestWalkable} from './movement.mjs';
 export {ITEMS,SHOPS,GESTURES} from './world-data.mjs';
 export const LOCATIONS=[{id:'temple',name:'Nhà chùa',x:0,z:-37,color:0x8c3023},{id:'church',name:'Nhà thờ',x:39,z:-30,color:0xe0cfad},{id:'pond',name:'Hồ cá',x:-34,z:-21,color:0x509e96},{id:'kitchen',name:'Phòng bếp',x:-34,z:17,color:0xc1905f},{id:'garden',name:'Vườn rau',x:34,z:9,color:0x8ca460},{id:'toilet',name:'Nhà xí',x:-34,z:48,color:0xb6b79c},{id:'meeting',name:'Họp cổ đông',x:3,z:49,color:0xac865d},{id:'court',name:'Phòng xét xử',x:37,z:45,color:0xae7759}];
 export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,onStand}){
@@ -65,6 +66,7 @@ export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,
  }
  function setState(s){const oldId=state.user?.id;state=s;if(!me||oldId!==s.user?.id){if(me)actors.remove(me);me=monk(s.user?.color||0xb5823d);me.userData.local=true;me.rotation.y=Math.PI;const ring=mesh(geometry('TorusGeometry',[1.05,.035,8,48]),mat(0xefc96c,{emissive:0xc49b34,emissiveIntensity:.7}),0,.08,0,me);ring.rotation.x=-Math.PI/2;pos.set(s.user?.x||0,0,s.user?.z??10);}
   if(area!==s.area){rebuild(s.area);pos.set(s.user?.x||0,0,s.user?.z??10);cameraLook.copy(pos).add(new T.Vector3(0,1.8,-1));yaw=.1;pitch=s.area==='village'?.8:.55;targetDistance=s.area==='village'?55:23;}
+  if(!s.user?.seat){const safe=nearestWalkable(pos.x,pos.z,valid);if(safe)pos.set(safe.x,0,safe.z);}
   syncPlayers(s.players);if(me&&!me.userData.label){me.userData.label=text(s.user?.name||'Bạn · Đi thử',0,3.15,0,.55,'#ffe1a0',me);}
  }
  function syncPlayers(list){const ids=new Set();for(const p of list){if(p.id===state.user?.id||p.area!==area)continue;ids.add(p.id);let g=players.get(p.id);if(!g){g=monk(p.color);g.position.set(p.x||0,0,p.z??10);g.userData.label=text(p.name,0,3.15,0,.55,'#fff2d4',g);g.userData.id=p.id;players.set(p.id,g);}g.userData.remote=p;}
@@ -90,5 +92,5 @@ export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,
   near=[...(landscape?.interactions||[]),...portals].filter(p=>Math.hypot(pos.x-p.x,pos.z-p.z)<(p.kind?4.5:4)).sort((a,b)=>Math.hypot(pos.x-a.x,pos.z-a.z)-Math.hypot(pos.x-b.x,pos.z-b.z))[0]||null;const panel=document.querySelector('#interaction');panel.hidden=!near&&!state.user?.seat;if(near||state.user?.seat){panel.querySelector('span').textContent=state.user?.seat?'Bạn đang ngồi nghỉ':near.name;panel.querySelector('button').textContent=state.user?.seat?'Đứng dậy':near.kind==='sit'?'Ngồi xuống':near.kind==='shop'?'Xem quầy hàng':'Đi vào →';}
   if(canvas.width!==Math.floor(innerWidth*renderer.getPixelRatio())||canvas.height!==Math.floor(innerHeight*renderer.getPixelRatio())){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}renderer.render(scene,camera);if(t-lastFrame>.1){lastFrame=t;minimap();}document.querySelector('#loading').classList.add('hidden');
  }
- animate();return {setState,syncPlayers,snap:spawn=>{pos.set(spawn.x,0,spawn.z);if(me)me.rotation.y=spawn.facing||0;clickTarget=null;keys.clear();},position:()=>({x:pos.x,z:pos.z,facing:me?.rotation.y||0,area}),action:()=>{acting=Date.now()+2500;clickTarget=null;keys.clear();},zoom:delta=>{targetDistance=T.MathUtils.clamp(targetDistance+delta,7,65);},dispose:()=>{disposed=true;renderer.dispose();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);}};
+ animate();return {setState,syncPlayers,snap:spawn=>{const safe=state.user?.seat?spawn:nearestWalkable(spawn.x,spawn.z,valid)||spawn;pos.set(safe.x,0,safe.z);if(me)me.rotation.y=spawn.facing||0;clickTarget=null;keys.clear();},position:()=>({x:pos.x,z:pos.z,facing:me?.rotation.y||0,area}),action:()=>{acting=Date.now()+2500;clickTarget=null;keys.clear();},zoom:delta=>{targetDistance=T.MathUtils.clamp(targetDistance+delta,7,65);},dispose:()=>{disposed=true;renderer.dispose();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);}};
 }

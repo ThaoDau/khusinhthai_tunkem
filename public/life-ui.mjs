@@ -1,5 +1,22 @@
 // Included in app.js at build time so existing dialogs and account flow stay shared.
-async function gesture(action,bench){if(!requireUser())return;try{await call('presence',game.position());const result=await call('gesture',{action,bench});if(action==='sit'||action==='stand')game.snap(result);$('#modal').close();await refresh();if(action==='sit')toast('Bạn đang ngồi nghỉ. Nhấn E hoặc chọn Đứng dậy để rời ghế.');}catch(e){toast(e.message);}}
+async function gesture(action,bench){
+ if(!requireUser()||worldTransitionBusy)return;
+ worldTransitionBusy=true;worldRevision++;
+ try{
+  // Drain the old position request before changing pose. Standing must never depend on a position preflight.
+  await presenceRequest?.catch(()=>{});
+  if(action!=='stand')await call('presence',game.position());
+  const result=await call('gesture',{action,bench});
+  // Commit the new pose before snapping; otherwise the next animation frame can restore the old seat.
+  state={...state,user:result.user};
+  game.setState({...state,area:area.id});
+  if(action==='sit'||action==='stand')game.snap(result);
+  $('#modal').close();
+  if(action==='sit')toast('Bạn đang ngồi nghỉ. Nhấn E hoặc chọn Đứng dậy để rời ghế.');
+ }catch(e){toast(e.message);}
+ finally{worldRevision++;worldTransitionBusy=false;}
+ await refresh();
+}
 function gestureMenu(){modal(`<div class="modal-eyebrow">GỬI MỘT CHÚT NIỀM VUI</div><h2>Hôm nay bạn muốn…</h2><p>Người chơi khác cũng nhìn thấy động tác của bạn. Đi tới gần ghế rồi nhấn E để ngồi.</p><div class="gesture-grid">${GESTURES.map(g=>`<button data-gesture="${g.id}"><span>${g.emoji}</span>${g.name}</button>`).join('')}</div>`);document.querySelectorAll('[data-gesture]').forEach(b=>b.onclick=()=>gesture(b.dataset.gesture));}
 async function useItem(id){if(!requireUser())return;try{await call('use',{item:id});$('#modal').close();await refresh();toast(ITEMS[id].action==='wear'?'Đã đổi trang phục của nhân vật.':'Thưởng thức '+ITEMS[id].name.toLowerCase()+' nhé!');}catch(e){toast(e.message);}}
 function bag(){if(!requireUser())return;modal(`<div class="modal-eyebrow">MANG MỘT CHÚT VUI THEO MÌNH</div><h2>Túi đồ của bạn 🎒</h2><div class="wallet">🪙 ${state.user.coins??0} xu trong game</div><p>Mỗi cư dân có 100 xu khởi đầu. Làm nhiệm vụ hằng ngày để kiếm thêm xu. Xu chỉ dùng trong trò chơi.</p>${state.inventory?.filter(i=>i.quantity>0).map(i=>{const item=ITEMS[i.item];if(!item)return '';return `<div class="shop-item"><span class="item-emoji">${item.emoji}</span><div><b>${item.name} × ${i.quantity}</b><p>${item.description}</p></div><button data-use="${item.id}">${item.action==='wear'?(state.user.hat?'Cất nón':'Đội nón'):'Dùng'}</button></div>`;}).join('')||'<p class="empty">Túi đang trống. Ghé quầy trà và quầy quà ở quảng trường nhé.</p>'}`);document.querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>useItem(b.dataset.use));}
