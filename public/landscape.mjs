@@ -46,7 +46,7 @@ export function buildLandscape({stage,scene,locations,block}) {
  bench(-19,-2);flowers(-24,3,1.3);flowers(-14,3,1.3);
  // Courtyard edging and detailed porches make each destination feel inhabited.
  for(const l of locations){const {x,z}=l;if(['pond','garden'].includes(l.id))continue;
-  const w=l.id==='temple'?22:17,d=l.id==='temple'?17:14,front=z+d/2;
+  const w=l.id==='temple'?22:l.id==='jail'?10:17,d=l.id==='temple'?17:l.id==='jail'?10:14,front=z+d/2;
   mesh(geo('BoxGeometry',[w+3,.1,5]),paveMat,x,.14,front+3);
   for(let i=0;i<3;i++)box(x,.2+i*.16,front+3-i*.5,5+i*.15,.25,.6,0xc9ba98);
   for(const side of [-1,1]){const ox=x+side*(w/2-1.5);flowers(ox,front+3.2,1);hedge(x+side*(w/2+2.8),z,2,d-1);box(x+side*(w/2+.08),3.8,z, .14,2.2,3.1,0x546d5d);box(x+side*(w/2+.17),3.8,z,.16,.12,3.3,0xdbbd87);box(x+side*(w/2+.17),3.8,z,.17,2.3,.12,0xdbbd87);}

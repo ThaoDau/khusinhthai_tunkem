@@ -1,0 +1,42 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';import {api} from '../server/api.mjs';
+function fixture(){const sql=new DatabaseSync(':memory:');for(const name of ['0000_village','0001_auth_rate','0002_positions','0003_social_life','0004_village_mystery'])sql.exec(readFileSync(new URL('../drizzle/'+name+'.sql',import.meta.url),'utf8'));
+ const wrap=(q,a=[])=>({bind:(...v)=>wrap(q,v),first:()=>sql.prepare(q).get(...a)||null,all:()=>({results:sql.prepare(q).all(...a)}),run:()=>sql.prepare(q).run(...a)}),DB={prepare:wrap,batch:s=>{sql.exec('BEGIN');try{const r=s.map(x=>x.run());sql.exec('COMMIT');return r;}catch(e){sql.exec('ROLLBACK');throw e;}}};
+ const call=async(path,body,user)=>{const r=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie:user?.cookie||'','content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),{DB});return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};};
+ const register=async name=>{const r=await call('auth',{mode:'register',name,username:name,password:'Synthetic-test-password'});assert.equal(r.status,200);return {id:r.data.user.id,cookie:r.cookie};};return {sql,call,register};}
+test('water, harvest, growth cooldown and theft share authoritative plots',async()=>{const f=fixture(),a=await f.register('gardener');
+ assert.equal((await f.call('farm',{action:'harvest',plot:0},a)).status,400);
+ f.sql.prepare("UPDATE users SET area='village',x=28,z=3 WHERE id=?").run(a.id);
+ assert.equal((await f.call('farm',{action:'water',plot:0},a)).status,200);
+ let s=(await f.call('state',null,a)).data;assert.equal(s.progress.find(p=>p.task==='water').count,1);assert.equal(s.user.points,30);
+ f.sql.prepare('UPDATE users SET farm_at=0 WHERE id=?').run(a.id);
+ assert.equal((await f.call('farm',{action:'harvest',plot:0},a)).status,200);
+ s=(await f.call('state',null,a)).data;assert.equal(s.inventory.find(i=>i.item==='vegetable').quantity,1);assert.ok(s.plots[0].ready_at>Date.now());
+ f.sql.prepare('UPDATE users SET farm_at=0 WHERE id=?').run(a.id);
+ assert.equal((await f.call('farm',{action:'harvest',plot:0},a)).status,400);
+ assert.equal((await f.call('steal',{spot:'garden',plot:0},a)).status,400);
+ const before=s.plots[0].ready_at;await f.call('farm',{action:'water',plot:0},a);s=(await f.call('state',null,a)).data;assert.ok(s.plots[0].ready_at<before);
+});
+test('red alert hides culprit, wrong votes cannot jail, correct votes jail and server enforces release',async()=>{
+ const f=fixture(),thief=await f.register('thief'),one=await f.register('witness_one'),two=await f.register('witness_two'),innocent=await f.register('innocent');
+ for(const u of [thief,one,two,innocent])f.sql.prepare("UPDATE users SET area='village',x=28,z=3 WHERE id=?").run(u.id);
+ assert.equal((await f.call('steal',{spot:'garden',plot:0},thief)).status,200);
+ assert.equal((await f.call('steal',{spot:'tea'},thief)).status,429);
+ let s=(await f.call('state',null,one)).data,c=s.incidents[0];assert.equal(c.status,'open');assert.equal(c.culprit,undefined);assert.ok(c.suspects.some(p=>p.id===thief.id));assert.equal(c.quorum,2);
+ await f.call('investigate',{incident:c.id,suspect:innocent.id},one);await f.call('investigate',{incident:c.id,suspect:innocent.id},two);
+ s=(await f.call('state',null,innocent)).data;assert.equal(s.user.jailed_until,0);assert.ok(s.incidents[0].eliminated.includes(innocent.id));
+ f.sql.prepare('UPDATE incident_votes SET created=0').run();
+ await f.call('investigate',{incident:c.id,suspect:thief.id},one);const solved=await f.call('investigate',{incident:c.id,suspect:thief.id},two);assert.equal(solved.status,200);
+ s=(await f.call('state',null,thief)).data;assert.equal(s.user.area,'jail');assert.ok(s.user.jailed_until>Date.now());assert.equal(s.incidents[0].status,'solved');assert.equal(s.incidents[0].solved_name,'thief');
+ assert.equal((await f.call('move',{area:'village'},thief)).status,403);
+ assert.equal((await f.call('presence',{area:'jail',x:10,z:10,facing:0},thief)).status,400);
+ assert.equal((await f.call('steal',{spot:'tea'},thief)).status,403);
+ assert.equal((await f.call('case',{defendant:one.id,reason:'Try escaping'},thief)).status,403);
+ f.sql.prepare('UPDATE users SET jailed_until=? WHERE id=?').run(Date.now()-1,thief.id);
+ s=(await f.call('state',null,thief)).data;assert.equal(s.user.jailed_until,0);assert.equal(s.user.area,'village');assert.equal((await f.call('move',{area:'temple'},thief)).status,200);
+});
+test('shop theft needs proximity, one witness can solve a two-player village, and incidents expire',async()=>{
+ const f=fixture(),a=await f.register('picker'),b=await f.register('neighbor');assert.equal((await f.call('steal',{spot:'gifts'},a)).status,400);
+ f.sql.prepare("UPDATE users SET area='village',x=15,z=-6 WHERE id=?").run(a.id);await f.call('steal',{spot:'gifts'},a);
+ let s=(await f.call('state',null,b)).data;assert.equal(s.incidents[0].quorum,1);assert.ok((await f.call('state',null,a)).data.inventory.some(i=>i.item==='hat'));
+ f.sql.prepare('UPDATE incidents SET expires=?').run(Date.now()-1);s=(await f.call('state',null,b)).data;assert.equal(s.incidents[0].status,'expired');assert.equal((await f.call('investigate',{incident:s.incidents[0].id,suspect:a.id},b)).status,400);
+});

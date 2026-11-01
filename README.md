@@ -19,6 +19,16 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 - Nút ⚡ cho phép chọn Tự động / Ưu tiên mượt / Ưu tiên đẹp. Chế độ tự động điều chỉnh độ nét và bóng đổ theo tốc độ thực tế, lưu tùy chọn trên thiết bị. Tab ẩn ngừng dựng hình.
 - Đứng gần ghế, quầy trà hoặc quầy quà rồi nhấn E để tương tác. Ngồi ghế rồi nhấn E để đứng dậy. Chọn Động tác để vẫy tay, nhảy múa, vui mừng, chắp tay. Các động tác hiển thị cho người chơi khác.
 - Mua trà sen, bánh bao chay, nón lá bằng xu trong game; mở Túi đồ để ăn/uống hoặc đội/cất nón. Có thể uống trà khi đang ngồi. Mỗi tài khoản nhận 100 xu ban đầu; nhiệm vụ hằng ngày cộng thêm xu bên cạnh điểm tốt. Không có thanh toán tiền thật.
+- Trong vườn hoặc cạnh luống ngoài làng, nhấn E để tưới, thu hoạch hoặc chọn lén nhổ rau. Tưới làm rau lớn sớm hơn và tính nhiệm vụ hằng ngày; thu hoạch được 1 bó rau, 2 xu và 5 điểm. Luống dùng chung, mọc lại sau khoảng 45 giây.
+- Quầy trà và quầy quà có lựa chọn lén lấy bánh hoặc nón. Trộm là lựa chọn nhập vai có hậu quả trong game, không phải thao tác mua hàng.
+
+## Trộm đồ, điều tra và tạm giữ
+
+Mỗi vụ trộm phát cảnh báo đỏ cho cả làng, để lại dấu trang phục và danh sách tối đa 5 người có mặt gần thời điểm đó. Vòng đỏ dưới chân chỉ biểu thị người được khoanh vùng, không kết luận có tội. Mọi người bấm bảng vụ việc để đọc dấu vết, thảo luận qua chat và bỏ phiếu.
+
+Với 2 người đang chơi, 1 nhân chứng có thể đưa phiếu; nhóm đông hơn cần 2 phiếu độc lập. Máy chủ đối chiếu với người thực sự thực hiện hành động: phiếu sai chỉ loại trừ nghi phạm, không nhốt người vô tội. Đúng thủ phạm sẽ tạm giữ 90 giây, trừ 10 xu, thu hồi món đồ còn lại rồi tự đưa về làng. Khi bị giữ vẫn chat và làm động tác được; không thể đổi khu để trốn. Tắt tab không dừng đồng hồ.
+
+Vụ việc hết hạn sau 3 phút nếu chưa đủ bằng chứng; một người phải chờ 2 phút giữa các lần trộm và không mở thêm vụ khi vụ trước còn hoạt động. Tất cả là luật của trò chơi, không có hình phạt ngoài game.
 
 `npm test` kiểm tra nhiều tài khoản, phân quyền chat riêng/chat đội, điểm nhiệm vụ, đăng nhập, đăng xuất và hòa giải. `npm run build` đóng gói Cloudflare Worker cùng giao diện trong `dist/server/index.js`.
 
