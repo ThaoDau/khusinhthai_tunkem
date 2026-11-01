@@ -12,6 +12,7 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 
 - WASD / mũi tên: đi lại. Bấm vào sàn cũng có thể di chuyển đến điểm chọn.
 - Kéo chuột hoặc kéo một ngón tay: xoay camera; cuộn chuột hoặc nút +/−: phóng to/thu nhỏ.
+- Nút ↺ trên bản đồ nhỏ đặt lại góc nhìn về nhân vật. Trong phòng, camera được giới hạn bên trong tường; đổi khu sẽ đặt lại khoảng cách nhìn, nhà tạm giữ có góc nhìn riêng từ trên xuống.
 - E: bước vào nhà khi đứng gần cửa; trong phòng là hành động nhiệm vụ. Phím cách cũng làm nhiệm vụ.
 - Ra làng: đi từ phòng ra bản đồ chung; khi đăng nhập sẽ xuất hiện gần cửa căn nhà vừa rời.
 - Bản đồ và thẻ nhiệm vụ cho phép đi nhanh; điện thoại có bàn phím điều hướng cảm ứng.

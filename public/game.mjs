@@ -7,6 +7,7 @@ import {createFarmScene} from './farm-scene.mjs';
 import {PLOTS,THEFT_SPOTS} from './mystery-data.mjs';
 export {PLOTS,THEFT_SPOTS} from './mystery-data.mjs';
 import {nearestWalkable} from './movement.mjs';
+import {cameraPreset,roomOrbitDistance} from './camera.mjs';
 import {batchStaticScene,AdaptiveQuality,remoteMotion} from './rendering.mjs';
 export {ITEMS,SHOPS,GESTURES} from './world-data.mjs';
 export const LOCATIONS=[{id:'temple',name:'Nhà chùa',x:0,z:-37,color:0x8c3023},{id:'church',name:'Nhà thờ',x:39,z:-30,color:0xe0cfad},{id:'pond',name:'Hồ cá',x:-34,z:-21,color:0x509e96},{id:'kitchen',name:'Phòng bếp',x:-34,z:17,color:0xc1905f},{id:'garden',name:'Vườn rau',x:34,z:9,color:0x8ca460},{id:'toilet',name:'Nhà xí',x:-34,z:48,color:0xb6b79c},{id:'meeting',name:'Họp cổ đông',x:3,z:49,color:0xac865d},{id:'court',name:'Phòng xét xử',x:37,z:45,color:0xae7759},{id:'jail',name:'Nhà tạm giữ',x:52,z:43,color:0x88958c},{id:'werewolf',name:'Bàn Ma Sói',x:-20,z:66,color:0x51496b}];
@@ -88,10 +89,13 @@ export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,
   document.querySelector('#mini-label').textContent=id==='village'?'LÀNG THẢO ĐẬU':LOCATIONS.find(l=>l.id===id)?.name.toUpperCase();
   document.querySelector('#village-exit').textContent=id==='village'?'⌂ Ghé nhà chùa':'← Ra làng';
  }
+ function placeCamera(){const d=roomOrbitDistance(area,cameraLook,yaw,pitch,distance);camera.position.set(cameraLook.x+Math.sin(yaw)*d*Math.cos(pitch),cameraLook.y+Math.sin(pitch)*d,cameraLook.z+Math.cos(yaw)*d*Math.cos(pitch));camera.lookAt(cameraLook);}
+ function resetCamera(){const preset=cameraPreset(area);yaw=.1;pitch=preset.pitch;distance=targetDistance=preset.distance;cameraLook.set(pos.x,1.8,pos.z-1);placeCamera();}
  function setState(s){const oldId=state.user?.id;state=s;if(!me||oldId!==s.user?.id){if(me)actors.remove(me);me=monk(s.user?.color||0xb5823d);me.userData.local=true;me.rotation.y=Math.PI;const ring=mesh(geometry('TorusGeometry',[1.05,.035,8,48]),mat(0xefc96c,{emissive:0xc49b34,emissiveIntensity:.7}),0,.08,0,me);ring.rotation.x=-Math.PI/2;pos.set(s.user?.x||0,0,s.user?.z??10);}
-  if(area!==s.area){rebuild(s.area);pos.set(s.user?.x||0,0,s.user?.z??10);cameraLook.copy(pos).add(new T.Vector3(0,1.8,-1));yaw=.1;pitch=s.area==='village'?.8:.55;targetDistance=s.area==='village'?55:23;}
+  if(area!==s.area){rebuild(s.area);pos.set(s.user?.x||0,0,s.user?.z??10);resetCamera();}
   if(s.user?.wf_locked){pos.set(s.user.x,0,s.user.z);if(me)me.rotation.y=s.user.facing;}
   if(!s.user?.seat){const safe=nearestWalkable(pos.x,pos.z,valid);if(safe)pos.set(safe.x,0,safe.z);}
+  if(oldId!==s.user?.id)resetCamera();
   updateMysteryScene(s);farmScene?.update(s.plots,s.server_time||Date.now());
   syncPlayers(s.players);if(me&&!me.userData.label){me.userData.label=text(s.user?.name||'Bạn · Đi thử',0,3.15,0,.55,'#ffe1a0',me);}
  }
@@ -114,7 +118,7 @@ export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,
   for(const g of demo){g.userData.body.rotation.x=.18+Math.max(0,Math.sin(t*.8+g.position.x))*.7;}
   landscape?.update(t);wolfScene?.update(t);if(crimeRing?.visible)crimeRing.material.opacity=.25+Math.sin(t*3)*.1;
   for(const g of players.values()){const p=g.userData.remote;if(!p)continue;const walking=Math.hypot(g.position.x-(p.x||0),g.position.z-(p.z??10))>.15;const motion=g.userData.motion;const age=motion?Math.min(.35,(performance.now()-motion.at)/1000):0;remoteTarget.set(motion?motion.x+motion.vx*age:p.x||0,0,motion?motion.z+motion.vz*age:p.z??10);g.position.lerp(remoteTarget,1-Math.exp(-dt*12));let delta=T.MathUtils.euclideanModulo((p.facing||0)-g.rotation.y+Math.PI,Math.PI*2)-Math.PI;g.rotation.y+=delta*Math.min(1,dt*10);g.userData.suspectRing.visible=suspectIds.has(p.id);poseCharacter(g,p,t,walking);}
-  distance=T.MathUtils.lerp(distance,targetDistance,Math.min(1,dt*7));desiredLook.set(pos.x,1.8,pos.z-1);cameraLook.lerp(desiredLook,Math.min(1,dt*6));camera.position.set(cameraLook.x+Math.sin(yaw)*distance*Math.cos(pitch),cameraLook.y+Math.sin(pitch)*distance,cameraLook.z+Math.cos(yaw)*distance*Math.cos(pitch));camera.lookAt(cameraLook);
+  distance=T.MathUtils.lerp(distance,targetDistance,Math.min(1,dt*7));desiredLook.set(pos.x,1.8,pos.z-1);cameraLook.lerp(desiredLook,Math.min(1,dt*6));placeCamera();
   for(let i=0;i<flames.length;i++)flames[i].scale.y=1.3+Math.sin(t*4+i)*.06;for(let i=0;i<fish.length;i++){fish[i].position.x+=Math.sin(t*.7+i)*dt*.65;fish[i].rotation.y=Math.sin(t*.7+i)*.5;}
   if(t-uiAt>.1){uiAt=t;near=null;let nearestDistance=Infinity;for(const candidate of interactionCandidates){const d=Math.hypot(pos.x-candidate.x,pos.z-candidate.z);if(d<(candidate.kind?4.5:4)&&d<nearestDistance){near=candidate;nearestDistance=d;}}const key=state.user?.seat?'seated':near?(near.kind||'door')+near.id:'';if(key!==lastInteractionKey){lastInteractionKey=key;interactionPanel.hidden=!key;if(key){interactionText.textContent=state.user?.seat?'Bạn đang ngồi nghỉ':near.name;interactionButton.textContent=state.user?.seat?'Đứng dậy':near.kind==='sit'?'Ngồi xuống':near.kind==='shop'?'Xem quầy hàng':near.kind==='garden'?'Chăm rau':'Đi vào →';}}}
 
@@ -123,5 +127,5 @@ export function createGame({canvas,onArea,onAction,onPlayer,onHint,onSit,onShop,
  }
  function visibilityChanged(){keys.clear();cancelAnimationFrame(animationId);if(!document.hidden&&!disposed){clock.start();uiAt=0;lastFrame=0;measuredFrames=0;measureAt=performance.now();animate();}}
  document.addEventListener('visibilitychange',visibilityChanged);
- animate();return {setState,syncPlayers,setWerewolf,setQuality,getQuality:()=>({mode:qualityMode,fps:Number(canvas.dataset.fps)||0,ratio:quality.ratio,shadows:quality.shadow}),snap:spawn=>{const safe=state.user?.seat?spawn:nearestWalkable(spawn.x,spawn.z,valid)||spawn;pos.set(safe.x,0,safe.z);if(me)me.rotation.y=spawn.facing||0;clickTarget=null;keys.clear();},position:()=>({x:pos.x,z:pos.z,facing:me?.rotation.y||0,area}),action:()=>{acting=Date.now()+2500;clickTarget=null;keys.clear();},zoom:delta=>{targetDistance=T.MathUtils.clamp(targetDistance+delta,7,65);},dispose:()=>{disposed=true;cancelAnimationFrame(animationId);document.removeEventListener('visibilitychange',visibilityChanged);farmScene?.dispose();staticBatches?.dispose();wolfScene?.dispose();landscape?.dispose();renderer.dispose();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);}};
+ animate();return {setState,syncPlayers,setWerewolf,setQuality,resetCamera,getQuality:()=>({mode:qualityMode,fps:Number(canvas.dataset.fps)||0,ratio:quality.ratio,shadows:quality.shadow}),snap:spawn=>{const safe=state.user?.seat?spawn:nearestWalkable(spawn.x,spawn.z,valid)||spawn;pos.set(safe.x,0,safe.z);if(me)me.rotation.y=spawn.facing||0;clickTarget=null;keys.clear();},position:()=>({x:pos.x,z:pos.z,facing:me?.rotation.y||0,area}),action:()=>{acting=Date.now()+2500;clickTarget=null;keys.clear();},zoom:delta=>{targetDistance=T.MathUtils.clamp(targetDistance+delta,7,65);},dispose:()=>{disposed=true;cancelAnimationFrame(animationId);document.removeEventListener('visibilitychange',visibilityChanged);farmScene?.dispose();staticBatches?.dispose();wolfScene?.dispose();landscape?.dispose();renderer.dispose();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);}};
 }
