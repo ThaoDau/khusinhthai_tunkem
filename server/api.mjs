@@ -1,7 +1,8 @@
 import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
 import {werewolf} from './werewolf.mjs';
-export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village','jail','werewolf'];
+import {homesteads,landSnapshot} from './homesteads.mjs';
+export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village','jail','werewolf','government'];
 export const TASKS = {bow:{area:'temple',goal:3,reward:30},pray:{area:'church',goal:2,reward:20},feed:{area:'pond',goal:3,reward:25},cook:{area:'kitchen',goal:2,reward:25},water:{area:'garden',goal:3,reward:30},clean:{area:'toilet',goal:2,reward:20},meet:{area:'meeting',goal:1,reward:15}};
 const enc=new TextEncoder();
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers}});
@@ -47,14 +48,16 @@ export async function api(req,env){
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
   if(me)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
+  const land=await landSnapshot({all,run,now,me,db});
   const players=await all('SELECT id,name,color,points,hat,seat,wf_room,wf_locked,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
   const teams=await all('SELECT t.*, (SELECT COUNT(*) FROM users u WHERE u.team=t.id) AS members, (SELECT COALESCE(SUM(points),0) FROM users u WHERE u.team=t.id) AS points FROM teams t ORDER BY points DESC LIMIT 50');
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
   const inventory=me?await all('SELECT item,quantity FROM inventory WHERE user_id=? AND quantity>0',me.id):[];
-  return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,...await mysterySnapshot({all,run,now,me,db})});
+  return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,land,...await mysterySnapshot({all,run,now,me,db})});
  }
  if(!me)return json({error:'Hãy đăng nhập để cùng chơi nhé.'},401);
+ if(route==='land'){if(req.method!=='POST')return json({error:'Dùng thao tác đất đai trong game.'},405);const r=await homesteads({db,me,now,one,all,run,body});return json(r.data,r.status);}
  if(route==='werewolf'){if(req.method!=='POST')return json({error:'Dùng thao tác trong phòng Ma Sói.'},405);const w=await werewolf({db,me,now,one,all,run,body});return json(w.data,w.status);}
  if(me.wf_locked&&(['move','gesture','farm','steal','investigate','case','buy','use','action','team'].includes(route)||route==='messages'&&req.method==='POST'))return json({error:'Bạn đang ở bàn Ma Sói. Dùng bảng Ma Sói để hành động/chat hoặc rời trận.'},403);
  if(me.jailed_until>now&&['move','case'].includes(route))return json({error:'Bạn đang bị tạm giữ. Hết giờ sẽ tự trở lại làng.'},403);
@@ -88,6 +91,7 @@ export async function api(req,env){
  }
  if(route==='use'&&req.method==='POST'){
   const item=ITEMS[body.item];if(!item)return json({error:'Vật phẩm không tồn tại.'},400);
+  if(item.action==='material')return json({error:'Mở Đất & nhà để dùng vật liệu xây dựng và hạt giống.'},400);
   if(item.action==='wear'){
    if(!await one('SELECT quantity FROM inventory WHERE user_id=? AND item=? AND quantity>0',me.id,item.id))return json({error:'Bạn chưa có món này trong túi.'},400);
    await run('UPDATE users SET hat=? WHERE id=?',me.hat?0:1,me.id);return json({ok:true});
@@ -110,7 +114,7 @@ export async function api(req,env){
   if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);
   if(body.area==='werewolf'&&!me.wf_room)return json({error:'Hãy tạo hoặc tham gia phòng Ma Sói trước.'},400);
   if(me.wf_room&&!me.wf_locked)await run('UPDATE users SET wf_room=NULL WHERE id=?',me.id);
-  const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56],jail:[52,53]};
+  const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56],jail:[52,53],government:[-29,-49]};
   const [x,z]=body.area==='village'?(exits[me.area]||[0,10]):[0,10];
   await run("UPDATE users SET area=?,action=?,seat='',seen=?,x=?,z=?,facing=0,position_at=? WHERE id=?",body.area,'',now,x,z,now,me.id);return json({ok:true,x,z});
  }

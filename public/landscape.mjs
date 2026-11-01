@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {isLandDistrict} from './land-data.mjs';
 import {BENCHES,SHOPS} from './world-data.mjs';
 
 // Outdoor-only art. Shared geometry and instanced planting keep the denser village light.
@@ -22,7 +23,8 @@ export function buildLandscape({stage,scene,locations,block}) {
  const roofMat=new T.MeshStandardMaterial({map:tile,roughness:.82,color:0xe5bb87,side:T.DoubleSide});materials.set('roof',roofMat);
  mesh(geo('BoxGeometry',[205,.02,205]),groundMat,0,-.085,0);
  function pave(x,z,w,d){const p=mesh(geo('BoxGeometry',[w,.07,d]),paveMat,x,.075,z);p.castShadow=false;for(const offset of [-1,1]){box(x+offset*(w/2+.15),.13,z,.22,.2,d,0xb2a48b);}}
- pave(0,10,13,140);for(const [x,z,w,d]of [[13.5,-19,64,8.5],[-17,-7,36,4],[0,24,92,8.5],[0,64,92,8.5]]){const p=mesh(geo('BoxGeometry',[w,.06,d]),paveMat,x,.12,z);p.castShadow=false;for(const side of [-1,1])box(x,.15,z+side*(d/2+.15),w,.2,.22,0xb3a68b);}
+ pave(0,10,13,140);for(const [x,z,w,d]of [[13.5,-19,64,8.5],[-17,-7,36,4],[0,24,132,8.5],[0,64,132,8.5],[-14,-49,30,4]]){const p=mesh(geo('BoxGeometry',[w,.06,d]),paveMat,x,.12,z);p.castShadow=false;for(const side of [-1,1])box(x,.15,z+side*(d/2+.15),w,.2,.22,0xb3a68b);}
+ for(const x of [-62,62])pave(x,3,5,152);
  // A circular village square replaces the empty intersection.
  cyl(0,.16,1,16,16,.13,0xb5a48a);cyl(0,.25,1,15.5,15.5,.05,0xd7c5a3);
  const square=mesh(geo('RingGeometry',[4.8,15.1,64]),paveMat,0,.29,1);square.rotation.x=-Math.PI/2;square.castShadow=false;
@@ -84,8 +86,8 @@ export function buildLandscape({stage,scene,locations,block}) {
  // Gateway and continuous planting form a clear, lush village boundary.
  for(const x of [-7,7]){box(x,3.8,78,.7,7.6,.7,0x8f7851);flowers(x,78,1.5);}
  box(0,7.4,78,16,.6,1.5,0x785b3c);box(0,7.9,78,17,.4,2.4,0x9a784c);textSign('KHU SINH THÁI THẢO ĐẬU',0,6.4,78.8,1.5);
- fence(-34,77,48);fence(34,77,48);fence(-59,14,126,Math.PI/2);fence(60,14,126,Math.PI/2);
- for(let i=0;i<130;i++){const a=i*2.399,rr=65+(i%6)*5,x=Math.cos(a)*rr,z=10+Math.sin(a)*rr;instance('leaf',[0x557b59,0x6d8e5c,0x7b995e][i%3],x,2+(i%3),z,2.8,3.6,2.8);instance('trunk',0x826849,x,.9,z,.24,2,.24);}
+ fence(-34,77,48);fence(34,77,48);fence(-91,3,152,Math.PI/2);fence(91,3,152,Math.PI/2);
+ for(let i=0;i<130;i++){const a=i*2.399,rr=65+(i%6)*5,x=Math.cos(a)*rr,z=10+Math.sin(a)*rr;if(isLandDistrict(x,z)||locations.some(l=>Math.hypot(l.x-x,l.z-z)<15))continue;instance('leaf',[0x557b59,0x6d8e5c,0x7b995e][i%3],x,2+(i%3),z,2.8,3.6,2.8);instance('trunk',0x826849,x,.9,z,.24,2,.24);}
  const safe=(x,z)=>Math.abs(x)>8&&locations.every(l=>Math.abs(x-l.x)>14||Math.abs(z-l.z)>15)&&Math.abs(z+19)>6&&Math.abs(z-24)>6&&Math.abs(z-46)>6&&Math.abs(z-64)>6&&Math.hypot(x,z-1)>17;
  for(let i=0;i<650;i++){const x=(random()-.5)*116,z=(random()-.5)*120+10;if(!safe(x,z))continue;instance('grass',i%2?0x78935d:0xa1ac6c,x,.15,z,.1+random()*.15,.2+random()*.3,.1,random()*Math.PI);if(i%5===0)instance('flower',i%2?0xeac08e:0xe4b0a6,x,.45,z,.1,.12,.1);}
  for(const [x,z,w,d]of [[-16,48,4,15],[17,49,3,13],[-51,-2,3,11],[52,-9,3,12],[-16,-39,3,13],[19,-40,3,13],[-16,19,3,8]])hedge(x,z,w,d);

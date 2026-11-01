@@ -1,0 +1,32 @@
+CREATE TABLE land_parcels (
+ id TEXT PRIMARY KEY,
+ owner_id TEXT UNIQUE REFERENCES users(id),
+ status TEXT NOT NULL DEFAULT 'vacant',
+ title TEXT NOT NULL DEFAULT '',
+ purpose TEXT NOT NULL DEFAULT '',
+ applied_at INTEGER NOT NULL DEFAULT 0,
+ permit_at INTEGER NOT NULL DEFAULT 0,
+ house_level INTEGER NOT NULL DEFAULT 0,
+ house_ready INTEGER NOT NULL DEFAULT 0,
+ garden_level INTEGER NOT NULL DEFAULT 0,
+ garden_ready INTEGER NOT NULL DEFAULT 0,
+ greenhouse_ready INTEGER NOT NULL DEFAULT 0,
+ revision INTEGER NOT NULL DEFAULT 0,
+ nonce TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE land_beds (
+ parcel_id TEXT NOT NULL REFERENCES land_parcels(id),
+ bed INTEGER NOT NULL,
+ crop TEXT NOT NULL DEFAULT '',
+ planted_at INTEGER NOT NULL DEFAULT 0,
+ ready_at INTEGER NOT NULL DEFAULT 0,
+ watered_at INTEGER NOT NULL DEFAULT 0,
+ revision INTEGER NOT NULL DEFAULT 0,
+ PRIMARY KEY(parcel_id,bed)
+);
+CREATE TABLE land_log (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ parcel_id TEXT NOT NULL,
+ text TEXT NOT NULL,
+ created INTEGER NOT NULL
+);

@@ -31,6 +31,17 @@ Với 2 người đang chơi, 1 nhân chứng có thể đưa phiếu; nhóm đ�
 
 Vụ việc hết hạn sau 3 phút nếu chưa đủ bằng chứng; một người phải chờ 2 phút giữa các lần trộm và không mở thêm vụ khi vụ trước còn hoạt động. Tất cả là luật của trò chơi, không có hình phạt ngoài game.
 
+## Đất đai, nhà riêng và vườn rau
+
+Bấm 🏡 trên bản đồ nhỏ hoặc tới Nhà chính quyền ở phía bắc làng. Bản đầu có 12 lô ở Xóm Tây và Xóm Đông; mỗi tài khoản một lô, dữ liệu dùng chung và lưu lâu dài.
+
+1. Đến Nhà chính quyền, chọn lô còn trống, điền tên nhà và mục đích sử dụng đất. Phí hồ sơ 20 xu. Cán bộ NPC tự cấp giấy phép sau 15 giây; đây là thủ tục nhập vai trong game.
+2. Khi cấp phép, nhận một lần 6 gỗ, 3 đá và 8 gói hạt giống. Về lô đất để xây nhà gỗ (50 xu, 3 gỗ, 2 đá, 30 giây) và vườn 3 luống (20 xu, 2 gỗ, 15 giây). Công trình hoàn thành cả khi offline.
+3. Đứng gần luống, nhấn E để gieo cải xanh (45 giây/2 bó), cà rốt (70 giây/3 bó) hoặc bí đỏ (90 giây/4 bó). Mỗi vụ dùng 1 hạt giống; tưới một lần giảm 10 giây. Chủ đất gieo và thu hoạch, bạn bè được tưới giúp.
+4. Mang rau về Nhà chính quyền bán 3 xu/bó. Mua thêm gỗ 4 xu, đá 5 xu, hạt giống 2 xu. Có thể nâng vườn thành nhà kính với 40 xu, 4 gỗ, 2 đá; sau 30 giây cây sẽ lớn nhanh hơn 25%.
+
+Nhà, biển tên, vườn và giàn nhà kính hiển thị trên thế giới 3D chung. Đường dân cư nối vào làng, bản đồ nhỏ đánh dấu lô của bạn. Mái nhà ẩn khi đứng bên trong để nhìn rõ nhân vật. Chưa có chuyển nhượng đất, cho thuê hay cấp phép bởi người chơi; bản hiện tại do NPC xử lý. Xu và đất chỉ tồn tại trong trò chơi.
+
 ## Ma Sói trong làng
 
 Bấm 🐺 trên thanh trên cùng hoặc vào Bàn Ma Sói ở phía nam làng để tạo/vào phòng. Cần 4–12 người thật; chủ phòng bấm Bắt đầu khi đủ người. Mọi người ngồi quanh lửa trại, ngày/đêm và đồng hồ tự chuyển. Tải lại trang sẽ nối lại đúng bàn và vai của tài khoản.
