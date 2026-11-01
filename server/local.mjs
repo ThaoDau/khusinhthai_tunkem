@@ -6,6 +6,7 @@ mkdirSync('.data',{recursive:true});const sqlite=new DatabaseSync(process.env.DB
 sqlite.exec('PRAGMA journal_mode=WAL');
 sqlite.exec('CREATE TABLE IF NOT EXISTS _migrations(name TEXT PRIMARY KEY)');
 if(!sqlite.prepare('SELECT name FROM _migrations WHERE name=?').get('0000')){sqlite.exec(readFileSync('drizzle/0000_village.sql','utf8'));sqlite.prepare('INSERT INTO _migrations VALUES(?)').run('0000');}
+if(!sqlite.prepare('SELECT name FROM _migrations WHERE name=?').get('0001')){sqlite.exec(readFileSync('drizzle/0001_auth_rate.sql','utf8'));sqlite.prepare('INSERT INTO _migrations VALUES(?)').run('0001');}
 const wrap=(sql,args=[])=>({bind:(...a)=>wrap(sql,a),first:()=>sqlite.prepare(sql).get(...args)||null,all:()=>({results:sqlite.prepare(sql).all(...args)}),run:()=>sqlite.prepare(sql).run(...args)});
 const DB={prepare:wrap,batch:statements=>{sqlite.exec('BEGIN IMMEDIATE');try{const result=statements.map(s=>s.run());sqlite.exec('COMMIT');return result;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};

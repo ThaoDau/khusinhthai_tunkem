@@ -18,6 +18,13 @@ export async function api(req,env){
  const me=token?await one('SELECT u.* FROM users u JOIN sessions s ON u.id=s.user_id WHERE s.token=? AND s.expires>?',token,now):null;
  if(route==='auth'&&req.method==='POST'){
   const username=clean(body.username,24).toLowerCase(), pass=body.password;
+  const window=Math.floor(now/600000),ip=req.headers.get('cf-connecting-ip')||'local';
+  for(const [label,value,max] of [['account',username,10],['network',ip,60]]){
+   const key=hex(await crypto.subtle.digest('SHA-256',enc.encode(label+':'+value+':'+window)));
+   await run('INSERT INTO auth_limits(key,count,expires) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1',key,now+1200000);
+   const limit=await one('SELECT count FROM auth_limits WHERE key=?',key);if(limit.count>max)return json({error:'Bạn đã thử quá nhiều lần. Vui lòng quay lại sau 10 phút.'},429);
+  }
+  await run('DELETE FROM auth_limits WHERE expires<?',now);
   if(!/^[a-z0-9_]{3,24}$/.test(username)||typeof pass!=='string'||pass.length<8||pass.length>128)return json({error:'Tên đăng nhập 3–24 ký tự a-z, số, dấu _. Mật khẩu 8–128 ký tự.'},400);
   let u=await one('SELECT * FROM users WHERE username=?',username);
   if(body.mode==='register'){

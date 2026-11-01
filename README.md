@@ -2,6 +2,8 @@
 
 Trò chơi cộng đồng bằng tiếng Việt, với khung cảnh 2.5D vẽ bằng Canvas, không cần thư viện giao diện.
 
+Bản web: https://thao-dau-eco-village.funteal64.chatgpt.site
+
 ## Chạy trên máy
 
 Cần Node.js 24 trở lên. Trong thư mục dự án, chạy `npm start`, sau đó mở http://localhost:3000. Không cần cài thêm thư viện. SQLite tự khởi tạo trong `.data/` và lưu tài khoản, tin nhắn, đội, nhiệm vụ, phiên hòa giải. Giữ nguyên thư mục này nếu muốn giữ dữ liệu.
@@ -27,4 +29,4 @@ Cũng có thể triển khai Node lên VPS/hosting hỗ trợ Node 24, đặt pr
 
 ## Giới hạn hiện tại
 
-Đây là bản MVP dành cho nhóm nhỏ. Chưa có khôi phục mật khẩu, xác minh email, quản trị viên/moderation, chặn tài khoản, voice chat, di chuyển tự do hay mô hình 3D như ảnh tham khảo. Chat có giới hạn tốc độ; cần bổ sung kiểm soát spam đăng ký/đăng nhập ở lớp hosting trước khi mở rộng công khai. Không dùng mật khẩu đã dùng cho dịch vụ khác.
+Đây là bản MVP dành cho nhóm nhỏ. Chưa có khôi phục mật khẩu, xác minh email, quản trị viên/moderation, chặn tài khoản, voice chat, di chuyển tự do hay mô hình 3D như ảnh tham khảo. Chat và đăng nhập/đăng ký có giới hạn tốc độ trên máy chủ; vẫn cần công cụ quản trị và kiểm soát spam chuyên dụng khi mở rộng. Không dùng mật khẩu đã dùng cho dịch vụ khác.
