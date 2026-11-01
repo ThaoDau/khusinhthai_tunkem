@@ -26,7 +26,7 @@ createServer(async(req,res)=>{
    response=await api(new Request(url,{method:req.method,headers:req.headers,...(req.method==='POST'?{body:Buffer.concat(chunks)}:{})}),{DB});
   }else{
    const file=url.pathname==='/'?'index.html':url.pathname.slice(1);
-   response=['index.html','app.js','style.css','game.css','performance.css','mystery.css','werewolf.css','land.css','game.bundle.js'].includes(file)?new Response(file==='app.js'?readFileSync('public/app.js','utf8')+'\n'+readFileSync('public/life-ui.mjs','utf8')+'\n'+readFileSync('public/mystery-ui.mjs','utf8')+'\n'+readFileSync('public/werewolf-ui.mjs','utf8')+'\n'+readFileSync('public/land-ui.mjs','utf8'):readFileSync('public/'+file),{headers:{'content-type':types[file.split('.').at(-1)]}}):new Response('Not found',{status:404});
+   response=['index.html','app.js','style.css','game.css','performance.css','mystery.css','werewolf.css','land.css','handbook.css','game.bundle.js'].includes(file)?new Response(file==='app.js'?readFileSync('public/app.js','utf8')+'\n'+readFileSync('public/life-ui.mjs','utf8')+'\n'+readFileSync('public/mystery-ui.mjs','utf8')+'\n'+readFileSync('public/werewolf-ui.mjs','utf8')+'\n'+readFileSync('public/land-ui.mjs','utf8')+'\n'+readFileSync('public/handbook-ui.mjs','utf8'):readFileSync('public/'+file),{headers:{'content-type':types[file.split('.').at(-1)]}}):new Response('Not found',{status:404});
   }
   res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
  }catch(e){console.error(e);res.writeHead(500);res.end('Server error');}

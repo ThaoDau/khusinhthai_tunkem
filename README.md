@@ -8,6 +8,10 @@ Bản web: https://thao-dau-eco-village.funteal64.chatgpt.site
 
 Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở http://localhost:3000. Sau khi đã build có thể chạy `npm start`. SQLite tự khởi tạo trong `.data/` và lưu tài khoản, tin nhắn, đội, nhiệm vụ, phiên hòa giải, vị trí. Giữ nguyên thư mục này nếu muốn giữ dữ liệu.
 
+## Sổ tay trong game
+
+Bấm 📖 ở góc trên để mở Sổ tay hướng dẫn. Sổ tay có mục lục 10 phần và tìm kiếm hỗ trợ tiếng Việt không dấu; mở đầu là hướng dẫn xin đất, nhận vật liệu và xây nhà từng bước. Các mục khác gồm trồng/bán rau, nhiệm vụ, chat/đội, túi đồ/động tác, điều tra, hòa giải/tạm giữ, Ma Sói (cả cách rời bàn) và camera/độ mượt. Giá đất, xây dựng, giống rau và vật liệu đọc từ cấu hình hiện tại của game.
+
 ## Điều khiển
 
 - WASD / mũi tên: đi lại. Bấm vào sàn cũng có thể di chuyển đến điểm chọn.
