@@ -1,11 +1,11 @@
-export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court'];
+export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village'];
 export const TASKS = {bow:{area:'temple',goal:3,reward:30},pray:{area:'church',goal:2,reward:20},feed:{area:'pond',goal:3,reward:25},cook:{area:'kitchen',goal:2,reward:25},water:{area:'garden',goal:3,reward:30},clean:{area:'toilet',goal:2,reward:20},meet:{area:'meeting',goal:1,reward:15}};
 const enc=new TextEncoder();
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers}});
 const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
 async function password(pass,salt){const key=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:100000,hash:'SHA-256'},key,256));}
 const clean=(x,max=300)=>typeof x==='string'?x.trim().slice(0,max):'';
-const publicUser=u=>({id:u.id,name:u.name,color:u.color,points:u.points,team:u.team,area:u.area,action:u.action,action_at:u.action_at});
+const publicUser=u=>({id:u.id,name:u.name,color:u.color,points:u.points,team:u.team,area:u.area,action:u.action,action_at:u.action_at,x:u.x,z:u.z,facing:u.facing});
 export async function api(req,env){
  const db=env.DB, url=new URL(req.url), route=url.pathname.slice(5), now=Date.now();
  const one=(sql,...a)=>db.prepare(sql).bind(...a).first();
@@ -40,14 +40,28 @@ export async function api(req,env){
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
   if(me)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
-  const players=await all('SELECT id,name,color,points,team,area,action,action_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
+  const players=await all('SELECT id,name,color,points,team,area,action,action_at,x,z,facing FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
   const teams=await all('SELECT t.*, (SELECT COUNT(*) FROM users u WHERE u.team=t.id) AS members, (SELECT COALESCE(SUM(points),0) FROM users u WHERE u.team=t.id) AS points FROM teams t ORDER BY points DESC LIMIT 50');
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
   return json({user:me?publicUser(me):null,players,teams,progress,cases});
  }
  if(!me)return json({error:'Hãy đăng nhập để cùng chơi nhé.'},401);
- if(route==='move'&&req.method==='POST'){if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);await run('UPDATE users SET area=?,action=?,seen=? WHERE id=?',body.area,'',now,me.id);return json({ok:true});}
+ if(route==='presence'&&req.method==='POST'){
+  if(body.area===me.area&&[body.x,body.z,body.facing].every(Number.isFinite)){
+   const bound=me.area==='village'?100:17,depth=me.area==='village'?100:23;
+   const elapsed=Math.max(.25,Math.min(4,(now-me.position_at)/1000)),distance=Math.hypot(body.x-me.x,body.z-me.z);
+   if(Math.abs(body.x)>bound||Math.abs(body.z)>depth||distance>elapsed*10+2)return json({error:'Vị trí di chuyển không hợp lệ.',x:me.x,z:me.z},400);
+   await run('UPDATE users SET x=?,z=?,facing=?,seen=?,position_at=? WHERE id=?',body.x,body.z,body.facing,now,now,me.id);
+  }
+  return json({players:await all('SELECT id,name,color,points,team,area,action,action_at,x,z,facing FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000),area:me.area});
+ }
+ if(route==='move'&&req.method==='POST'){
+  if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);
+  const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56]};
+  const [x,z]=body.area==='village'?(exits[me.area]||[0,10]):[0,10];
+  await run('UPDATE users SET area=?,action=?,seen=?,x=?,z=?,facing=0,position_at=? WHERE id=?',body.area,'',now,x,z,now,me.id);return json({ok:true,x,z});
+ }
  if(route==='action'&&req.method==='POST'){
   const task=TASKS[body.task];if(!task||task.area!==me.area)return json({error:'Hãy đến đúng khu vực để làm nhiệm vụ.'},400);
   if(now-me.action_at<2500)return json({error:'Thảnh thơi một chút, rồi thử lại nhé.'},429);
@@ -85,7 +99,7 @@ export async function api(req,env){
   if(body.action==='reconcile'){const c=await one('SELECT * FROM cases WHERE id=?',body.id);if(!c||![c.plaintiff,c.defendant].includes(me.id))return json({error:'Chỉ người trong vụ việc mới có thể chủ động làm hòa.'},403);await run('UPDATE cases SET status=? WHERE id=?','resolved',c.id);return json({ok:true});}
   const target=clean(body.defendant,40),reason=clean(body.reason,200);if(target===me.id||reason.length<5||!await one('SELECT id FROM users WHERE id=?',target))return json({error:'Chọn người chơi và mô tả vụ việc (ít nhất 5 ký tự).'},400);
   if(await one('SELECT id FROM cases WHERE plaintiff=? AND created>?',me.id,now-60000))return json({error:'Mỗi phút chỉ mở một vụ việc.'},429);
-  await db.batch([db.prepare('INSERT INTO cases(id,plaintiff,defendant,reason,created) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),me.id,target,reason,now),db.prepare('UPDATE users SET area=? WHERE id IN (?,?)').bind('court',me.id,target)]);return json({ok:true});
+  await db.batch([db.prepare('INSERT INTO cases(id,plaintiff,defendant,reason,created) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),me.id,target,reason,now),db.prepare('UPDATE users SET area=?,x=0,z=10 WHERE id IN (?,?)').bind('court',me.id,target)]);return json({ok:true});
  }
  return json({error:'Không tìm thấy chức năng.'},404);
  }catch(e){console.error('API error',e.message);return json({error:e.message?.includes('UNIQUE')?'Tên này đã được sử dụng.':'Không thể xử lý yêu cầu. Vui lòng thử lại.'},500);}

@@ -3,3 +3,5 @@ node_modules/
 dist/
 *.tar.gz
 .env
+public/game.bundle.js
+outputs/

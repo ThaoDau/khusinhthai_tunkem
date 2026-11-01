@@ -1,6 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';import {readFileSync} from 'node:fs';import {api} from '../server/api.mjs';
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(readFileSync(new URL('../drizzle/0000_village.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0001_auth_rate.sql',import.meta.url),'utf8'));
+sqlite.exec(readFileSync(new URL('../drizzle/0002_positions.sql',import.meta.url),'utf8'));
 const wrap=(sql,a=[])=>({bind:(...args)=>wrap(sql,args),first:()=>sqlite.prepare(sql).get(...a)||null,all:()=>({results:sqlite.prepare(sql).all(...a)}),run:()=>sqlite.prepare(sql).run(...a)});
 const env={DB:{prepare:wrap,batch:s=>{sqlite.exec('BEGIN');try{const r=s.map(x=>x.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}}};
 async function call(path,body,cookie=''){const res=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),env);return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};}
@@ -22,6 +23,9 @@ test('multiplayer accounts, private channels, teams, tasks and court',async()=>{
  assert.equal((await call('messages?channel=team',null,c.cookie)).status,400);
  for(let i=0;i<4;i++){sqlite.prepare('UPDATE users SET action_at=0 WHERE id=?').run(a.data.user.id);const r=await call('action',{task:'bow'},a.cookie);assert.equal(r.data.reward,i<3?30:0);}
  assert.equal((await call('state',null,a.cookie)).data.user.points,90);
+ assert.equal((await call('presence',{area:'temple',x:1,z:11,facing:1},a.cookie)).status,200);
+ assert.equal((await call('state',null,a.cookie)).data.user.x,1);
+ assert.equal((await call('presence',{area:'temple',x:999,z:11,facing:1},a.cookie)).status,400);
  assert.equal((await call('action',{task:'bow'},a.cookie)).status,429);
  await call('move',{area:'garden'},a.cookie);assert.equal((await call('action',{task:'bow'},a.cookie)).status,400);
  await call('case',{defendant:b.data.user.id,reason:'Bất hòa trong nhập vai'},a.cookie);
