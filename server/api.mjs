@@ -41,7 +41,7 @@ export async function api(req,env){
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
   if(me)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
-  const players=await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
+  const players=await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
   const teams=await all('SELECT t.*, (SELECT COUNT(*) FROM users u WHERE u.team=t.id) AS members, (SELECT COALESCE(SUM(points),0) FROM users u WHERE u.team=t.id) AS points FROM teams t ORDER BY points DESC LIMIT 50');
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
@@ -92,7 +92,7 @@ export async function api(req,env){
    if(Math.abs(body.x)>bound||Math.abs(body.z)>depth||distance>elapsed*10+2)return json({error:'Vị trí di chuyển không hợp lệ.',x:me.x,z:me.z},400);
    if(!me.seat)await run('UPDATE users SET x=?,z=?,facing=?,seen=?,position_at=? WHERE id=?',body.x,body.z,body.facing,now,now,me.id);
   }
-  return json({players:await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000),area:me.area});
+  return json({players:await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000),area:me.area});
  }
  if(route==='move'&&req.method==='POST'){
   if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);

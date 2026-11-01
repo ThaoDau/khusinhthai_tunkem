@@ -31,7 +31,7 @@ export function buildLandscape({stage,scene,locations,block}) {
  // Tiered lotus fountain, flowing strands and moving droplets.
  cyl(0,.74,1,3.65,4,.35,0xab9876);const rim=mesh(geo('TorusGeometry',[3.5,.24,8,48]),mat(0xddc8a2),0,.97,1);rim.rotation.x=Math.PI/2;
  cyl(0,.94,1,3.35,3.35,.04,0x5caaa3);cyl(0,1.6,1,.35,.65,1.3,0xbda87e);cyl(0,2.25,1,1.8,1.2,.3,0xd8c9a6);cyl(0,2.45,1,1.65,1.65,.04,0x70bab0);cyl(0,3,1,.18,.3,1,0xb6a17d);ball(0,3.6,1,.5,0xe8d3a1);
- for(let i=0;i<10;i++){const a=i*Math.PI/5,x=Math.sin(a)*1.65,z=1+Math.cos(a)*1.65;const stream=cyl(x,1.7,z,.027,.045,1.35,0x9ed5ca);stream.material=mat(0xaadfd1,{transparent:true,opacity:.65});const drop=ball(x,1,z,.06,0xc4e8db);animated.push({object:drop,base:1,index:i});}
+ for(let i=0;i<10;i++){const a=i*Math.PI/5,x=Math.sin(a)*1.65,z=1+Math.cos(a)*1.65;const stream=cyl(x,1.7,z,.027,.045,1.35,0x9ed5ca);stream.material=mat(0xaadfd1,{transparent:true,opacity:.65});const drop=ball(x,1,z,.06,0xc4e8db);drop.userData.dynamic=true;drop.castShadow=false;animated.push({object:drop,base:1,index:i});}
  const fountainLight=new T.PointLight(0xffd497,8,12,2);fountainLight.position.set(0,3,1);root.add(fountainLight);
  function flowers(x,z,r=1.7){cyl(x,.22,z,r,r,.3,0x9c8d6e);cyl(x,.4,z,r-.12,r-.12,.1,0x725b3d);for(let i=0;i<14;i++){const a=random()*6.28,rr=Math.sqrt(random())*(r-.2),fx=x+Math.cos(a)*rr,fz=z+Math.sin(a)*rr;instance('leaf',0x648554,fx,.55,fz,.35,.45,.3);instance('flower',[0xefbd9a,0xf0d289,0xe9a7a1,0xf4e2b2][i%4],fx,.83+random()*.18,fz,.16,.13,.16);}}
  function hedge(x,z,w,d){box(x,.25,z,w+.3,.35,d+.3,0xa6946d);for(let i=0;i<Math.ceil(w/1.2);i++)for(let j=0;j<Math.ceil(d/1.2);j++)instance('leaf',0x567b51,x-w/2+.6+i*1.2,.85,z-d/2+.6+j*1.2,.85,.7,.8);}

@@ -1,0 +1,8 @@
+/* Keep the 3D canvas cheap to composite, especially on integrated graphics. */
+.glass{backdrop-filter:blur(4px)}
+body[data-quality="smooth"] .glass{backdrop-filter:none;background:#292014ed}
+body[data-quality="smooth"] dialog::backdrop{backdrop-filter:none}
+.quality-options{display:grid;gap:10px;margin-top:20px}
+.quality-options button{padding:16px;text-align:left;border:1px solid #b99a5c44;border-radius:9px;background:#bb9b5310;color:#ead4a6}
+.quality-options button.selected{border-color:#e0bd6d;background:#c1a15d24}
+.quality-options small{display:block;font-size:10px;color:#bbae8f;line-height:1.7;margin-top:7px}

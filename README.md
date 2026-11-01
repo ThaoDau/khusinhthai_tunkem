@@ -16,6 +16,7 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 - Ra làng: đi từ phòng ra bản đồ chung; khi đăng nhập sẽ xuất hiện gần cửa căn nhà vừa rời.
 - Bản đồ và thẻ nhiệm vụ cho phép đi nhanh; điện thoại có bàn phím điều hướng cảm ứng.
 - Nút toàn màn hình dùng Fullscreen API khi trình duyệt hỗ trợ. Các bảng chat, nhiệm vụ, bạn bè có thể thu gọn.
+- Nút ⚡ cho phép chọn Tự động / Ưu tiên mượt / Ưu tiên đẹp. Chế độ tự động điều chỉnh độ nét và bóng đổ theo tốc độ thực tế, lưu tùy chọn trên thiết bị. Tab ẩn ngừng dựng hình.
 - Đứng gần ghế, quầy trà hoặc quầy quà rồi nhấn E để tương tác. Ngồi ghế rồi nhấn E để đứng dậy. Chọn Động tác để vẫy tay, nhảy múa, vui mừng, chắp tay. Các động tác hiển thị cho người chơi khác.
 - Mua trà sen, bánh bao chay, nón lá bằng xu trong game; mở Túi đồ để ăn/uống hoặc đội/cất nón. Có thể uống trà khi đang ngồi. Mỗi tài khoản nhận 100 xu ban đầu; nhiệm vụ hằng ngày cộng thêm xu bên cạnh điểm tốt. Không có thanh toán tiền thật.
 
@@ -31,7 +32,8 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 - Tạo, tham gia, rời đội; thi đua tổng điểm thành viên.
 - 7 nhiệm vụ hằng ngày, giới hạn điểm theo lượt, reset theo ngày Việt Nam.
 - Báo xung đột nhập vai đưa hai người đến phòng xét xử. Người liên quan có thể làm hòa; 3 cư dân ngoài vụ việc bỏ phiếu cũng khép lại phiên. Không có chiến đấu vật lý hoặc hệ thống HP trong phiên bản này.
-- Vị trí và hướng nhìn gửi lên máy chủ khoảng mỗi 0,75 giây, nội suy chuyển động của bạn bè. Máy chủ giới hạn tốc độ và phạm vi vị trí. Các dữ liệu nhiệm vụ/chat đồng bộ mỗi 4 giây. Số online tính tài khoản có hoạt động trong 25 giây. Chánh điện có các khách hành hương minh họa không có nhãn tên, không tính vào số online.
+- Vị trí và hướng nhìn đồng bộ khoảng mỗi 250 ms khi đang di chuyển, 500 ms khi có bạn cùng chơi và 1,2 giây khi đứng một mình; các yêu cầu không chạy chồng nhau. Chuyển động bạn bè nội suy và dự đoán ngắn có giới hạn để giảm giật. Máy chủ kiểm tra tốc độ và phạm vi vị trí. Dữ liệu nhiệm vụ/chat đồng bộ mỗi 4 giây. Số online tính hoạt động trong 25 giây. Khách hành hương không có nhãn tên trong chánh điện là minh họa.
+- Cảnh tĩnh được gom theo chất liệu và ô không gian, giữ nguyên va chạm. Bóng cảnh được tính lại khi đổi khu/chất lượng, nhân vật dùng bóng nhẹ riêng. Nhãn tương tác và bản đồ nhỏ cập nhật chậm hơn vòng dựng hình để tránh thay đổi giao diện mỗi khung hình.
 
 ## Triển khai
 
