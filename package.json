@@ -1,0 +1,1 @@
+{"name":"thao-dau-eco-village","version":"1.0.0","type":"module","private":true,"scripts":{"dev":"node server/local.mjs","start":"node server/local.mjs","build":"node scripts/build.mjs","test":"node --test tests/*.test.mjs"},"engines":{"node":">=24"}}
