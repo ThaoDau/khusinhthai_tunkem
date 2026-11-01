@@ -16,6 +16,8 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 - Ra làng: đi từ phòng ra bản đồ chung; khi đăng nhập sẽ xuất hiện gần cửa căn nhà vừa rời.
 - Bản đồ và thẻ nhiệm vụ cho phép đi nhanh; điện thoại có bàn phím điều hướng cảm ứng.
 - Nút toàn màn hình dùng Fullscreen API khi trình duyệt hỗ trợ. Các bảng chat, nhiệm vụ, bạn bè có thể thu gọn.
+- Đứng gần ghế, quầy trà hoặc quầy quà rồi nhấn E để tương tác. Ngồi ghế rồi nhấn E để đứng dậy. Chọn Động tác để vẫy tay, nhảy múa, vui mừng, chắp tay. Các động tác hiển thị cho người chơi khác.
+- Mua trà sen, bánh bao chay, nón lá bằng xu trong game; mở Túi đồ để ăn/uống hoặc đội/cất nón. Có thể uống trà khi đang ngồi. Mỗi tài khoản nhận 100 xu ban đầu; nhiệm vụ hằng ngày cộng thêm xu bên cạnh điểm tốt. Không có thanh toán tiền thật.
 
 `npm test` kiểm tra nhiều tài khoản, phân quyền chat riêng/chat đội, điểm nhiệm vụ, đăng nhập, đăng xuất và hòa giải. `npm run build` đóng gói Cloudflare Worker cùng giao diện trong `dist/server/index.js`.
 
@@ -23,6 +25,7 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 
 - 8 địa điểm: nhà chùa, nhà thờ, hồ cá, bếp, vườn rau, nhà xí, họp cổ đông và phòng xét xử.
 - Nhân vật cúi lạy tại chùa, chuông tổng hợp âm thanh; bật/tắt được.
+- Cảnh ngoài làng gồm đường lát đá, quảng trường đài phun nước, giàn cây, ghế nghỉ, bồn hoa, đường đèn lồng, hàng rào và quầy bán hàng. Cây/hoa được dựng theo cụm bằng InstancedMesh để giảm chi phí vẽ.
 - Đăng ký, đăng nhập và đăng xuất; mật khẩu PBKDF2-SHA256 (100.000 vòng), cookie HttpOnly, SameSite=Lax, Secure trên HTTPS.
 - Chat chung, chat riêng hai người và chat đội được kiểm soát trên máy chủ.
 - Tạo, tham gia, rời đội; thi đua tổng điểm thành viên.

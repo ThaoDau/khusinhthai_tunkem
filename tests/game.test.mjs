@@ -2,6 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';import {D
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(readFileSync(new URL('../drizzle/0000_village.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0001_auth_rate.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0002_positions.sql',import.meta.url),'utf8'));
+sqlite.exec(readFileSync(new URL('../drizzle/0003_social_life.sql',import.meta.url),'utf8'));
 const wrap=(sql,a=[])=>({bind:(...args)=>wrap(sql,args),first:()=>sqlite.prepare(sql).get(...a)||null,all:()=>({results:sqlite.prepare(sql).all(...a)}),run:()=>sqlite.prepare(sql).run(...a)});
 const env={DB:{prepare:wrap,batch:s=>{sqlite.exec('BEGIN');try{const r=s.map(x=>x.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}}};
 async function call(path,body,cookie=''){const res=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),env);return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};}
@@ -37,4 +38,31 @@ test('multiplayer accounts, private channels, teams, tasks and court',async()=>{
  await call('logout',{},a.cookie);assert.equal((await call('state',null,a.cookie)).data.user,null);
  for(let i=0;i<11;i++)await call('auth',{mode:'login',username:'unknown',password:'wrong-password'});
  assert.equal((await call('auth',{mode:'login',username:'unknown',password:'wrong-password'})).status,429);
+});
+test('shops charge server prices, stock is consumed once, hats and sitting persist',async()=>{
+ const a=await call('auth',{mode:'register',username:'shopper',name:'Bạn mua hàng',password:'a-long-test-password'}),b=await call('auth',{mode:'register',username:'visitor',name:'Bạn ghé làng',password:'a-long-test-password'});
+ assert.equal(a.status,200);assert.equal(a.data.user.coins,100);
+ assert.equal((await call('buy',{shop:'tea',item:'tea'},a.cookie)).status,400);
+ sqlite.prepare('UPDATE users SET area=?,x=?,z=? WHERE id=?').run('village',-17,36,a.data.user.id);
+ assert.equal((await call('buy',{shop:'tea',item:'tea',price:0},a.cookie)).data.coins,80);
+ assert.equal((await call('buy',{shop:'tea',item:'hat'},a.cookie)).status,400);
+ await call('use',{item:'tea'},a.cookie);
+ assert.equal((await call('use',{item:'tea'},a.cookie)).status,400);
+ let s=(await call('state',null,a.cookie)).data;assert.equal(s.user.action,'drink');assert.equal(s.inventory.length,0);
+ for(let i=0;i<4;i++)await call('buy',{shop:'tea',item:'tea'},a.cookie);
+ assert.equal((await call('buy',{shop:'tea',item:'tea'},a.cookie)).status,400);
+ s=(await call('state',null,a.cookie)).data;assert.equal(s.user.coins,0);assert.equal(s.inventory[0].quantity,4);
+ sqlite.prepare('UPDATE users SET coins=100,x=15,z=-6 WHERE id=?').run(a.data.user.id);
+ await call('buy',{shop:'gifts',item:'hat'},a.cookie);await call('use',{item:'hat'},a.cookie);
+ assert.equal((await call('state',null,a.cookie)).data.user.hat,1);
+ sqlite.prepare('UPDATE users SET x=-10,z=-7 WHERE id=?').run(a.data.user.id);
+ const seat=await call('gesture',{action:'sit',bench:'square-nw'},a.cookie);assert.equal(seat.status,200);
+ sqlite.prepare('UPDATE users SET area=?,x=-10,z=-7 WHERE id=?').run('village',b.data.user.id);
+ assert.equal((await call('gesture',{action:'sit',bench:'square-nw'},b.cookie)).status,409);
+ await call('use',{item:'tea'},a.cookie);s=(await call('state',null,a.cookie)).data;assert.equal(s.user.seat,'square-nw');assert.equal(s.user.action,'drink');
+ assert.equal(s.players.find(p=>p.id===a.data.user.id).hat,1);
+ await call('gesture',{action:'stand'},a.cookie);s=(await call('state',null,a.cookie)).data;assert.equal(s.user.seat,'');assert.ok(s.user.x>-9);
+ assert.equal((await call('gesture',{action:'sit',bench:'pond-deck'},a.cookie)).status,400);
+ sqlite.prepare('UPDATE users SET action_at=0 WHERE id=?').run(a.data.user.id);await call('gesture',{action:'wave'},a.cookie);
+ assert.equal((await call('state',null,b.cookie)).data.players.find(p=>p.id===a.data.user.id).action,'wave');
 });
