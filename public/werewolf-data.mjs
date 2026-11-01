@@ -1,0 +1,4 @@
+export const WOLF_ROLES={wolf:{name:'Ma Sói',emoji:'🐺',description:'Cùng bầy chọn người cắn mỗi đêm. Thắng khi số Sói bằng hoặc nhiều hơn phe còn lại.'},seer:{name:'Tiên tri',emoji:'🔮',description:'Mỗi đêm chọn một người để soi. Kết quả Sói/không phải Sói chỉ bạn được xem khi trời sáng.'},guard:{name:'Bảo vệ',emoji:'🛡️',description:'Mỗi đêm bảo vệ một người, được chọn chính mình nhưng không lặp cùng mục tiêu hai đêm liên tiếp.'},villager:{name:'Dân làng',emoji:'🌾',description:'Lắng nghe, suy luận và bỏ phiếu ban ngày. Cùng Tiên tri, Bảo vệ loại hết Sói để thắng.'}};
+export const WOLF_PHASES={lobby:'Phòng chờ',night:'Đêm',discussion:'Thảo luận',vote:'Bỏ phiếu',finished:'Kết thúc'};
+export const WOLF_TIMES={night:30000,discussion:60000,vote:30000};
+export function wolfSeat(index,count){const angle=index*Math.PI*2/Math.max(count,1);return {x:Math.sin(angle)*8,z:Math.cos(angle)*8,facing:angle+Math.PI};}

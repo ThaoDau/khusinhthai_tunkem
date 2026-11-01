@@ -30,7 +30,18 @@ Với 2 người đang chơi, 1 nhân chứng có thể đưa phiếu; nhóm đ�
 
 Vụ việc hết hạn sau 3 phút nếu chưa đủ bằng chứng; một người phải chờ 2 phút giữa các lần trộm và không mở thêm vụ khi vụ trước còn hoạt động. Tất cả là luật của trò chơi, không có hình phạt ngoài game.
 
-`npm test` kiểm tra nhiều tài khoản, phân quyền chat riêng/chat đội, điểm nhiệm vụ, đăng nhập, đăng xuất và hòa giải. `npm run build` đóng gói Cloudflare Worker cùng giao diện trong `dist/server/index.js`.
+## Ma Sói trong làng
+
+Bấm 🐺 trên thanh trên cùng hoặc vào Bàn Ma Sói ở phía nam làng để tạo/vào phòng. Cần 4–12 người thật; chủ phòng bấm Bắt đầu khi đủ người. Mọi người ngồi quanh lửa trại, ngày/đêm và đồng hồ tự chuyển. Tải lại trang sẽ nối lại đúng bàn và vai của tài khoản.
+
+- 4–5 người: 1 Sói; 6–8: 2 Sói; 9–12: 3 Sói. Luôn có 1 Tiên tri và 1 Bảo vệ, còn lại là Dân làng. Vai được chia ngẫu nhiên trên máy chủ và giữ kín.
+- Đêm 30 giây: Sói chọn người cắn, Tiên tri soi một người, Bảo vệ che chở một người. Kết quả soi chỉ Tiên tri thấy lúc sáng. Bảo vệ được chọn chính mình nhưng không chọn cùng người hai đêm liên tiếp. Sói hòa mục tiêu thì không ai chết.
+- Ngày: thảo luận 60 giây, bỏ phiếu 30 giây. Hòa phiếu hoặc Bỏ qua nhiều nhất thì không loại ai. Vai người bị loại được công bố.
+- Hết Sói thì Dân thắng; Sói bằng hoặc đông hơn người còn lại thì Sói thắng. Chưa phân thắng bại sau 20 đêm thì hòa. Chủ phòng có thể mở ván mới và chia lại vai.
+- Ban đêm chỉ Sói còn sống dùng kênh bầy Sói. Người bị loại dùng kênh linh hồn; ban ngày người còn sống dùng kênh bàn làng. Máy chủ kiểm soát quyền xem/gửi; chat ngoài làng và các hoạt động khác tạm khóa trong trận.
+- Rời trận hoặc mất kết nối quá 90 giây bị tính loại. Trở lại trước mốc này vẫn tiếp tục được. Chủ phòng mất kết nối thì quyền chủ phòng được chuyển cho người đang online. Không có người chơi giả trong bản công khai.
+
+`npm test` kiểm tra nhiều tài khoản, phân quyền chat, điểm nhiệm vụ, đăng nhập, hòa giải, vụ trộm và vòng đời Ma Sói (giấu vai, năng lực, đồng hồ, bỏ phiếu, thắng và chơi lại). `npm run build` đóng gói Cloudflare Worker cùng giao diện trong `dist/server/index.js`.
 
 ## Tính năng
 

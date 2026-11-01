@@ -6,7 +6,7 @@ const bunGeometry=new T.SphereGeometry(.23,12,8),bunMaterial=new T.MeshStandardM
 const up=new T.Vector3(0,1,0),direction=new T.Vector3(),shoulder=new T.Vector3();
 export function poseCharacter(g,p,time,moving=false,forceBow=false){
  const d=g.userData;if(!d.life){const limbs=[new T.Mesh(armGeometry,armMaterial),new T.Mesh(armGeometry,armMaterial)];limbs.forEach(o=>{o.castShadow=true;d.body.add(o);});const hat=new T.Mesh(hatGeometry,hatMaterial);hat.position.set(0,2.72,0);d.body.add(hat);const cup=new T.Mesh(cupGeometry,cupMaterial),bun=new T.Mesh(bunGeometry,bunMaterial);d.body.add(cup,bun);d.life={limbs,hat,cup,bun};}
- const life=d.life,active=Date.now()-(p.action_at||0)<5000,action=active?p.action:'',sitting=Boolean(p.seat);
+ const life=d.life,active=Date.now()-(p.action_at||0)<5000,action=active?p.action:'',sitting=Boolean(p.seat||p.wf_locked);
  d.body.rotation.set(0,0,0);d.body.position.y=0;d.body.scale.set(1,sitting?.74:1,1);
  g.position.y=sitting?.95:moving?Math.abs(Math.sin(time*12))*.07:0;
  if(d.shadow)d.shadow.position.y=.025-g.position.y;

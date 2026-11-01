@@ -4,6 +4,7 @@ sqlite.exec(readFileSync(new URL('../drizzle/0001_auth_rate.sql',import.meta.url
 sqlite.exec(readFileSync(new URL('../drizzle/0002_positions.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0003_social_life.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0004_village_mystery.sql',import.meta.url),'utf8'));
+sqlite.exec(readFileSync(new URL('../drizzle/0005_werewolf.sql',import.meta.url),'utf8'));
 const wrap=(sql,a=[])=>({bind:(...args)=>wrap(sql,args),first:()=>sqlite.prepare(sql).get(...a)||null,all:()=>({results:sqlite.prepare(sql).all(...a)}),run:()=>sqlite.prepare(sql).run(...a)});
 const env={DB:{prepare:wrap,batch:s=>{sqlite.exec('BEGIN');try{const r=s.map(x=>x.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}}};
 async function call(path,body,cookie=''){const res=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),env);return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};}

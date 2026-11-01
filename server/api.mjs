@@ -1,13 +1,14 @@
 import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
-export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village','jail'];
+import {werewolf} from './werewolf.mjs';
+export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village','jail','werewolf'];
 export const TASKS = {bow:{area:'temple',goal:3,reward:30},pray:{area:'church',goal:2,reward:20},feed:{area:'pond',goal:3,reward:25},cook:{area:'kitchen',goal:2,reward:25},water:{area:'garden',goal:3,reward:30},clean:{area:'toilet',goal:2,reward:20},meet:{area:'meeting',goal:1,reward:15}};
 const enc=new TextEncoder();
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers}});
 const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
 async function password(pass,salt){const key=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:100000,hash:'SHA-256'},key,256));}
 const clean=(x,max=300)=>typeof x==='string'?x.trim().slice(0,max):'';
-const publicUser=u=>({id:u.id,name:u.name,color:u.color,points:u.points,coins:u.coins,hat:u.hat,seat:u.seat,jailed_until:u.jailed_until,team:u.team,area:u.area,action:u.action,action_at:u.action_at,x:u.x,z:u.z,facing:u.facing});
+const publicUser=u=>({id:u.id,name:u.name,color:u.color,points:u.points,coins:u.coins,hat:u.hat,seat:u.seat,jailed_until:u.jailed_until,wf_room:u.wf_room,wf_locked:u.wf_locked,team:u.team,area:u.area,action:u.action,action_at:u.action_at,x:u.x,z:u.z,facing:u.facing});
 export async function api(req,env){
  const db=env.DB, url=new URL(req.url), route=url.pathname.slice(5), now=Date.now();
  const one=(sql,...a)=>db.prepare(sql).bind(...a).first();
@@ -46,7 +47,7 @@ export async function api(req,env){
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
   if(me)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
-  const players=await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
+  const players=await all('SELECT id,name,color,points,hat,seat,wf_room,wf_locked,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
   const teams=await all('SELECT t.*, (SELECT COUNT(*) FROM users u WHERE u.team=t.id) AS members, (SELECT COALESCE(SUM(points),0) FROM users u WHERE u.team=t.id) AS points FROM teams t ORDER BY points DESC LIMIT 50');
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
@@ -54,6 +55,8 @@ export async function api(req,env){
   return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,...await mysterySnapshot({all,run,now,me,db})});
  }
  if(!me)return json({error:'Hãy đăng nhập để cùng chơi nhé.'},401);
+ if(route==='werewolf'){if(req.method!=='POST')return json({error:'Dùng thao tác trong phòng Ma Sói.'},405);const w=await werewolf({db,me,now,one,all,run,body});return json(w.data,w.status);}
+ if(me.wf_locked&&(['move','gesture','farm','steal','investigate','case','buy','use','action','team'].includes(route)||route==='messages'&&req.method==='POST'))return json({error:'Bạn đang ở bàn Ma Sói. Dùng bảng Ma Sói để hành động/chat hoặc rời trận.'},403);
  if(me.jailed_until>now&&['move','case'].includes(route))return json({error:'Bạn đang bị tạm giữ. Hết giờ sẽ tự trở lại làng.'},403);
  const play=await villagePlay({route,body,db,me,now,one,all,run});if(play)return json(play.data,play.status);
  if(route==='gesture'&&req.method==='POST'){
@@ -94,16 +97,19 @@ export async function api(req,env){
   return json({ok:true,action:item.action});
  }
  if(route==='presence'&&req.method==='POST'){
-  if(body.area===me.area&&[body.x,body.z,body.facing].every(Number.isFinite)){
+  if(me.wf_locked)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
+  if(!me.wf_locked&&body.area===me.area&&[body.x,body.z,body.facing].every(Number.isFinite)){
    const bound=me.jailed_until>now?4:me.area==='village'?100:17,depth=me.jailed_until>now?4:me.area==='village'?100:23;
    const elapsed=Math.max(.25,Math.min(4,(now-me.position_at)/1000)),distance=Math.hypot(body.x-me.x,body.z-me.z);
    if(Math.abs(body.x)>bound||Math.abs(body.z)>depth||distance>elapsed*10+2)return json({error:'Vị trí di chuyển không hợp lệ.',x:me.x,z:me.z},400);
    if(!me.seat)await run('UPDATE users SET x=?,z=?,facing=?,seen=?,position_at=? WHERE id=?',body.x,body.z,body.facing,now,now,me.id);
   }
-  return json({players:await all('SELECT id,name,color,points,hat,seat,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000),area:me.area});
+  return json({players:await all('SELECT id,name,color,points,hat,seat,wf_room,wf_locked,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000),area:me.area});
  }
  if(route==='move'&&req.method==='POST'){
   if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);
+  if(body.area==='werewolf'&&!me.wf_room)return json({error:'Hãy tạo hoặc tham gia phòng Ma Sói trước.'},400);
+  if(me.wf_room&&!me.wf_locked)await run('UPDATE users SET wf_room=NULL WHERE id=?',me.id);
   const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56],jail:[52,53]};
   const [x,z]=body.area==='village'?(exits[me.area]||[0,10]):[0,10];
   await run("UPDATE users SET area=?,action=?,seat='',seen=?,x=?,z=?,facing=0,position_at=? WHERE id=?",body.area,'',now,x,z,now,me.id);return json({ok:true,x,z});
