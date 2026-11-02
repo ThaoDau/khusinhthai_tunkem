@@ -1,5 +1,6 @@
 import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
+import {sanitation,sanitationSnapshot} from './sanitation.mjs';
 import {werewolf} from './werewolf.mjs';
 import {homesteads,landSnapshot} from './homesteads.mjs';
 export const AREAS = ['temple','church','pond','kitchen','garden','toilet','meeting','court','village','jail','werewolf','government'];
@@ -48,19 +49,21 @@ export async function api(req,env){
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
   if(me)await run('UPDATE users SET seen=? WHERE id=?',now,me.id);
+  const hygiene=await sanitationSnapshot({all,one,run,db,now,me});
   const land=await landSnapshot({all,run,now,me,db});
   const players=await all('SELECT id,name,color,points,hat,seat,wf_room,wf_locked,team,area,action,action_at,x,z,facing,position_at FROM users WHERE seen>? ORDER BY seen DESC LIMIT 60',now-25000);
   const teams=await all('SELECT t.*, (SELECT COUNT(*) FROM users u WHERE u.team=t.id) AS members, (SELECT COALESCE(SUM(points),0) FROM users u WHERE u.team=t.id) AS points FROM teams t ORDER BY points DESC LIMIT 50');
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
   const inventory=me?await all('SELECT item,quantity FROM inventory WHERE user_id=? AND quantity>0',me.id):[];
-  return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,land,...await mysterySnapshot({all,run,now,me,db})});
+  return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,land,...hygiene,...await mysterySnapshot({all,run,now,me,db})});
  }
  if(!me)return json({error:'Hãy đăng nhập để cùng chơi nhé.'},401);
  if(route==='land'){if(req.method!=='POST')return json({error:'Dùng thao tác đất đai trong game.'},405);const r=await homesteads({db,me,now,one,all,run,body});return json(r.data,r.status);}
  if(route==='werewolf'){if(req.method!=='POST')return json({error:'Dùng thao tác trong phòng Ma Sói.'},405);const w=await werewolf({db,me,now,one,all,run,body});return json(w.data,w.status);}
  if(me.wf_locked&&(['move','gesture','farm','steal','investigate','case','buy','use','action','team'].includes(route)||route==='messages'&&req.method==='POST'))return json({error:'Bạn đang ở bàn Ma Sói. Dùng bảng Ma Sói để hành động/chat hoặc rời trận.'},403);
  if(me.jailed_until>now&&['move','case'].includes(route))return json({error:'Bạn đang bị tạm giữ. Hết giờ sẽ tự trở lại làng.'},403);
+ const wc=route==='toilet'&&req.method==='POST'?await sanitation({body,db,me,now,one}):null;if(wc)return json(wc.data,wc.status);
  const play=await villagePlay({route,body,db,me,now,one,all,run});if(play)return json(play.data,play.status);
  if(route==='gesture'&&req.method==='POST'){
   if(body.action==='sit'){
@@ -115,10 +118,12 @@ export async function api(req,env){
   if(body.area==='werewolf'&&!me.wf_room)return json({error:'Hãy tạo hoặc tham gia phòng Ma Sói trước.'},400);
   if(me.wf_room&&!me.wf_locked)await run('UPDATE users SET wf_room=NULL WHERE id=?',me.id);
   const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56],jail:[52,53],government:[-29,-49]};
+  if(body.area==='toilet'&&me.area!=='toilet')await run('INSERT INTO toilet_camera VALUES(?,?,?,?)',crypto.randomUUID(),me.id,me.name,now);
   const [x,z]=body.area==='village'?(exits[me.area]||[0,10]):[0,10];
   await run("UPDATE users SET area=?,action=?,seat='',seen=?,x=?,z=?,facing=0,position_at=? WHERE id=?",body.area,'',now,x,z,now,me.id);return json({ok:true,x,z});
  }
  if(route==='action'&&req.method==='POST'){
+  if(body.task==='clean')return json({error:'Chọn đi tiểu/đi nặng, xả nước và lau bồn để làm nhiệm vụ.'},400);
   const task=TASKS[body.task];if(!task||task.area!==me.area)return json({error:'Hãy đến đúng khu vực để làm nhiệm vụ.'},400);
   if(now-me.action_at<2500)return json({error:'Thảnh thơi một chút, rồi thử lại nhé.'},429);
   const day=new Date(now+25200000).toISOString().slice(0,10),p=await one('SELECT count FROM progress WHERE user_id=? AND task=? AND day=?',me.id,body.task,day),count=p?.count||0,reward=count<task.goal?task.reward:0;

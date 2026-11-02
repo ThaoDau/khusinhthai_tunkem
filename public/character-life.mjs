@@ -23,6 +23,7 @@ export function poseCharacter(g,p,time,moving=false,forceBow=false){
  if(action==='harvest'||action==='steal'){d.body.rotation.x=.5+Math.sin(time*4)*.1;d.armL.position.set(-.4,.7,1.1);d.armR.position.set(.4,.7+Math.sin(time*5)*.2,1.1);}
  if(['drink','eat'].includes(action)){const y=1.65+Math.sin(time*2)*.15;d.armR.position.set(.22,y,.83);d.head.rotation.x=.08;}
  else d.head.rotation.x=0;
+ const tense=['need_pee','need_poop'].includes(p.action)&&Date.now()-p.action_at<(p.action==='need_pee'?6000:10000);if(tense){d.body.rotation.x=.22;d.armL.position.set(-.15,.65,.75);d.armR.position.set(.15,.65,.75);d.head.rotation.z=Math.sin(time*8)*.12;}else d.head.rotation.z=0;if(d.mouth)d.mouth.scale.set(tense?.5:1,tense?1.8:.4,1);
  life.hat.visible=Boolean(p.hat);life.cup.visible=action==='drink'||action==='water';life.cup.rotation.x=action==='water'?.8:0;life.bun.visible=action==='eat';life.cup.position.copy(d.armR.position);life.cup.position.y+=.06;life.cup.position.z+=.08;life.bun.position.copy(d.armR.position);life.bun.position.y+=.08;life.bun.position.z+=.08;
  for(let i=0;i<2;i++){const hand=i?d.armR:d.armL;shoulder.set(i?.55:-.55,1.4,0);direction.subVectors(hand.position,shoulder);const limb=life.limbs[i];limb.position.copy(shoulder).add(hand.position).multiplyScalar(.5);limb.scale.y=direction.length();limb.quaternion.setFromUnitVectors(up,direction.normalize());}
 }

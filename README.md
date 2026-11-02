@@ -87,3 +87,6 @@ Cũng có thể triển khai Node lên VPS/hosting hỗ trợ Node 24, đặt pr
 ## Giới hạn hiện tại
 
 Đây là bản MVP 3D dành cho nhóm nhỏ. Cần trình duyệt hỗ trợ WebGL. Chưa có khôi phục mật khẩu, xác minh email, quản trị viên/moderation, chặn tài khoản, voice chat hay hệ thống chiến đấu vật lý. Va chạm đồ vật hiện xử lý ở máy khách; máy chủ kiểm tra tốc độ và biên bản đồ. Đồng bộ bằng HTTP polling, chưa phải WebSocket tần số cao. Chat và đăng nhập/đăng ký có giới hạn tốc độ; vẫn cần công cụ quản trị khi mở rộng. Không dùng mật khẩu đã dùng cho dịch vụ khác.
+
+### Nhà xí sạch sẽ
+Mỗi ngày Việt Nam: hoàn thành 2 lần đi tiểu/đi nặng, xả nước và lau bồn. Camera chỉ ghi cửa; cô lao công kiểm tra 12:00 (xử lý khi có lượt truy cập nếu làng vắng). Bỏ bẩn tạo vụ việc cần 2–3 phiếu độc lập, chọn sai không nhốt. Tạm giữ 90 giây, bạn bè có thể chuộc 20 xu game.

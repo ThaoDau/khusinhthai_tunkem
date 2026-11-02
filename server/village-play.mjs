@@ -74,6 +74,7 @@ export async function villagePlay(ctx){
  const culprit=await one('SELECT name FROM users WHERE id=?',c.culprit);
  const rs=await db.batch([db.prepare("UPDATE incidents SET status='solved',solved_name=? WHERE id=? AND status='open'").bind(culprit.name,c.id),db.prepare("UPDATE users SET area='jail',x=0,z=0,seat='',action='',jailed_until=?,coins=MAX(0,coins-10),position_at=? WHERE id=? AND changes()>0").bind(now+JAIL_SECONDS*1000,now,c.culprit)]);
  if(!changes(rs[0]))return result({error:'Vụ việc vừa được giải quyết.'},409);
+ if(c.item==='sanitation')await run('INSERT OR IGNORE INTO toilet_bail(incident,user_id) VALUES(?,?)',c.id,c.culprit);
  await run('UPDATE inventory SET quantity=MAX(0,quantity-1) WHERE user_id=? AND item=?',c.culprit,c.item);
   if(c.item==='hat')await run("UPDATE users SET hat=0 WHERE id=? AND NOT EXISTS(SELECT 1 FROM inventory WHERE user_id=? AND item='hat' AND quantity>0)",c.culprit,c.culprit);
  return result({ok:true,message:`Đúng thủ phạm: ${culprit.name}. Tạm giữ ${JAIL_SECONDS} giây và thu hồi món đồ còn lại.`});
