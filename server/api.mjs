@@ -1,4 +1,3 @@
-import {maintenance} from './maintenance.mjs';
 import {villageDatabase,villageDirectory,villageAction} from './villages.mjs';
 import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
@@ -21,7 +20,6 @@ export async function api(req,env){
  try{
  if(req.method!=='GET'&&req.headers.get('origin')&&req.headers.get('origin')!==url.origin)return json({error:'Yêu cầu không hợp lệ.'},403);
  let body={}; if(req.method==='POST'){if(Number(req.headers.get('content-length'))>8192)return json({error:'Nội dung quá dài.'},413);try{const raw=await req.text();if(raw.length>8192)return json({error:'Nội dung quá dài.'},413);body=JSON.parse(raw);}catch{return json({error:'Dữ liệu không hợp lệ.'},400);}}
- if(route==='maintenance-account-cleanup')return maintenance(req,env);
  const token=req.headers.get('cookie')?.match(/(?:^|;\s*)td_session=([a-f0-9-]+)/)?.[1];
  const account=token?await root.prepare('SELECT a.* FROM accounts a JOIN sessions s ON a.id=s.user_id WHERE s.token=? AND s.expires>?').bind(token,now).first():null;
  if(route==='villages'&&req.method==='GET')return json({villages:await villageDirectory(root),membership:account?.village_id||null});
