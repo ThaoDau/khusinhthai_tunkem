@@ -6,7 +6,7 @@ mkdirSync('.data',{recursive:true});
 const sqlite=new DatabaseSync(process.env.DB_PATH||'.data/village.sqlite');
 sqlite.exec('PRAGMA journal_mode=WAL');
 sqlite.exec('CREATE TABLE IF NOT EXISTS _migrations(name TEXT PRIMARY KEY)');
-for(const name of ['0000_village','0001_auth_rate','0002_positions','0003_social_life','0004_village_mystery','0005_werewolf','0006_homesteads','0007_livestock','0008_sanitation']){
+for(const name of ['0000_village','0001_auth_rate','0002_positions','0003_social_life','0004_village_mystery','0005_werewolf','0006_homesteads','0007_livestock','0008_sanitation','0009_villages']){
  const key=name.slice(0,4);
  if(!sqlite.prepare('SELECT name FROM _migrations WHERE name=?').get(key)){
   sqlite.exec(readFileSync(`drizzle/${name}.sql`,'utf8'));
@@ -26,7 +26,7 @@ createServer(async(req,res)=>{
    response=await api(new Request(url,{method:req.method,headers:req.headers,...(req.method==='POST'?{body:Buffer.concat(chunks)}:{})}),{DB});
   }else{
    const file=url.pathname==='/'?'index.html':url.pathname.slice(1);
-   response=['index.html','app.js','style.css','game.css','performance.css','mystery.css','werewolf.css','land.css','handbook.css','game.bundle.js'].includes(file)?new Response(file==='app.js'?readFileSync('public/app.js','utf8')+'\n'+readFileSync('public/life-ui.mjs','utf8')+'\n'+readFileSync('public/mystery-ui.mjs','utf8')+'\n'+readFileSync('public/werewolf-ui.mjs','utf8')+'\n'+readFileSync('public/land-ui.mjs','utf8')+'\n'+readFileSync('public/livestock-ui.mjs','utf8')+'\n'+readFileSync('public/toilet-ui.mjs','utf8')+'\n'+readFileSync('public/handbook-ui.mjs','utf8'):readFileSync('public/'+file),{headers:{'content-type':types[file.split('.').at(-1)]}}):new Response('Not found',{status:404});
+   response=['index.html','app.js','style.css','game.css','performance.css','mystery.css','werewolf.css','land.css','handbook.css','game.bundle.js'].includes(file)?new Response(file==='app.js'?readFileSync('public/app.js','utf8')+'\n'+readFileSync('public/life-ui.mjs','utf8')+'\n'+readFileSync('public/mystery-ui.mjs','utf8')+'\n'+readFileSync('public/werewolf-ui.mjs','utf8')+'\n'+readFileSync('public/land-ui.mjs','utf8')+'\n'+readFileSync('public/livestock-ui.mjs','utf8')+'\n'+readFileSync('public/villages-ui.mjs','utf8')+'\n'+readFileSync('public/toilet-ui.mjs','utf8')+'\n'+readFileSync('public/handbook-ui.mjs','utf8'):readFileSync('public/'+file),{headers:{'content-type':types[file.split('.').at(-1)]}}):new Response('Not found',{status:404});
   }
   res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
  }catch(e){console.error(e);res.writeHead(500);res.end('Server error');}

@@ -8,12 +8,13 @@ sqlite.exec(readFileSync(new URL('../drizzle/0005_werewolf.sql',import.meta.url)
 sqlite.exec(readFileSync(new URL('../drizzle/0006_homesteads.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0007_livestock.sql',import.meta.url),'utf8'));
 sqlite.exec(readFileSync(new URL('../drizzle/0008_sanitation.sql',import.meta.url),'utf8'));
+sqlite.exec(readFileSync(new URL('../drizzle/0009_villages.sql',import.meta.url),'utf8'));
 const wrap=(sql,a=[])=>({bind:(...args)=>wrap(sql,args),first:()=>sqlite.prepare(sql).get(...a)||null,all:()=>({results:sqlite.prepare(sql).all(...a)}),run:()=>sqlite.prepare(sql).run(...a)});
 const env={DB:{prepare:wrap,batch:s=>{sqlite.exec('BEGIN');try{const r=s.map(x=>x.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}}};
 async function call(path,body,cookie=''){const res=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),env);return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};}
 test('multiplayer accounts, private channels, teams, tasks and court',async()=>{
  assert.equal((await call('action',{task:'bow'})).status,401);
- const accounts=[];for(let i=0;i<5;i++){const r=await call('auth',{mode:'register',username:'player_'+i,name:'Bạn '+i,password:'a-long-test-password'});assert.equal(r.status,200);assert.ok(!r.data.user.hash);accounts.push(r);}
+ const accounts=[];for(let i=0;i<5;i++){const r=await call('auth',{mode:'register',village:'thao-dau',username:'player_'+i,name:'Bạn '+i,password:'a-long-test-password'});assert.equal(r.status,200);assert.ok(!r.data.user.hash);accounts.push(r);}
  const [a,b,c,d,e]=accounts;
  assert.equal((await call('auth',{mode:'login',username:'player_0',password:'wrong-password'})).status,401);
  assert.equal((await call('auth',{mode:'login',username:'player_0',password:'a-long-test-password'})).status,200);
@@ -45,7 +46,7 @@ test('multiplayer accounts, private channels, teams, tasks and court',async()=>{
  assert.equal((await call('auth',{mode:'login',username:'unknown',password:'wrong-password'})).status,429);
 });
 test('shops charge server prices, stock is consumed once, hats and sitting persist',async()=>{
- const a=await call('auth',{mode:'register',username:'shopper',name:'Bạn mua hàng',password:'a-long-test-password'}),b=await call('auth',{mode:'register',username:'visitor',name:'Bạn ghé làng',password:'a-long-test-password'});
+ const a=await call('auth',{mode:'register',village:'thao-dau',username:'shopper',name:'Bạn mua hàng',password:'a-long-test-password'}),b=await call('auth',{mode:'register',village:'thao-dau',username:'visitor',name:'Bạn ghé làng',password:'a-long-test-password'});
  assert.equal(a.status,200);assert.equal(a.data.user.coins,100);
  assert.equal((await call('buy',{shop:'tea',item:'tea'},a.cookie)).status,400);
  sqlite.prepare('UPDATE users SET area=?,x=?,z=? WHERE id=?').run('village',-17,36,a.data.user.id);

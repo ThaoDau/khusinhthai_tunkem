@@ -1,3 +1,4 @@
+import {villageDatabase,villageDirectory,villageAction} from './villages.mjs';
 import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
 import {sanitation,sanitationSnapshot} from './sanitation.mjs';
@@ -12,7 +13,7 @@ async function password(pass,salt){const key=await crypto.subtle.importKey('raw'
 const clean=(x,max=300)=>typeof x==='string'?x.trim().slice(0,max):'';
 const publicUser=u=>({id:u.id,name:u.name,color:u.color,points:u.points,coins:u.coins,hat:u.hat,seat:u.seat,jailed_until:u.jailed_until,wf_room:u.wf_room,wf_locked:u.wf_locked,team:u.team,area:u.area,action:u.action,action_at:u.action_at,x:u.x,z:u.z,facing:u.facing});
 export async function api(req,env){
- const db=env.DB, url=new URL(req.url), route=url.pathname.slice(5), now=Date.now();
+ const root=env.DB;let db=root;const url=new URL(req.url), route=url.pathname.slice(5), now=Date.now();
  const one=(sql,...a)=>db.prepare(sql).bind(...a).first();
  const all=async(sql,...a)=>(await db.prepare(sql).bind(...a).all()).results;
  const run=(sql,...a)=>db.prepare(sql).bind(...a).run();
@@ -20,7 +21,14 @@ export async function api(req,env){
  if(req.method!=='GET'&&req.headers.get('origin')&&req.headers.get('origin')!==url.origin)return json({error:'Yêu cầu không hợp lệ.'},403);
  let body={}; if(req.method==='POST'){if(Number(req.headers.get('content-length'))>8192)return json({error:'Nội dung quá dài.'},413);try{const raw=await req.text();if(raw.length>8192)return json({error:'Nội dung quá dài.'},413);body=JSON.parse(raw);}catch{return json({error:'Dữ liệu không hợp lệ.'},400);}}
  const token=req.headers.get('cookie')?.match(/(?:^|;\s*)td_session=([a-f0-9-]+)/)?.[1];
- let me=token?await one('SELECT u.* FROM users u JOIN sessions s ON u.id=s.user_id WHERE s.token=? AND s.expires>?',token,now):null;
+ const account=token?await root.prepare('SELECT a.* FROM accounts a JOIN sessions s ON a.id=s.user_id WHERE s.token=? AND s.expires>?').bind(token,now).first():null;
+ if(route==='villages'&&req.method==='GET')return json({villages:await villageDirectory(root),membership:account?.village_id||null});
+ if(route==='villages'&&req.method==='POST'){if(!account)return json({error:'Hãy đăng nhập trước.'},401);const r=await villageAction({root,account,body,now});return json(r.data,r.status);}
+ if(!['auth','logout'].includes(route)&&account?.village_id)db=villageDatabase(root,account.village_id);
+ let me=account?.village_id?await one('SELECT * FROM users WHERE id=?',account.id):null;
+ if(!['auth','logout','state'].includes(route)&&account&&!account.village_id)return json({error:'Hãy lập làng hoặc gia nhập làng trước.'},403);
+ const village=await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id WHERE v.id=?').bind(account?.village_id||'thao-dau').first();
+ if(route==='state'&&account&&!account.village_id)return json({user:{id:account.id,name:account.name,village_id:null},players:[],teams:[],progress:[],cases:[],inventory:[],needs_village:true,village:null});
  if(me?.jailed_until){
   if(me.jailed_until<=now){await run("UPDATE cases SET status='resolved' WHERE defendant=? AND id LIKE 'wc-%' AND status='open'",me.id);await run("UPDATE users SET jailed_until=0,area='village',x=52,z=53,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
   else if(me.area!=='jail'){await run("UPDATE users SET area='jail',x=0,z=0,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
@@ -35,16 +43,18 @@ export async function api(req,env){
   }
   await run('DELETE FROM auth_limits WHERE expires<?',now);
   if(!/^[a-z0-9_]{3,24}$/.test(username)||typeof pass!=='string'||pass.length<8||pass.length>128)return json({error:'Tên đăng nhập 3–24 ký tự a-z, số, dấu _. Mật khẩu 8–128 ký tự.'},400);
-  let u=await one('SELECT * FROM users WHERE username=?',username);
+  let u=await one('SELECT * FROM accounts WHERE username=?',username);
   if(body.mode==='register'){
    if(u)return json({error:'Tên đăng nhập đã được sử dụng.'},409);
    const name=clean(body.name,24);if(!name)return json({error:'Hãy nhập tên nhân vật.'},400);
    const salt=crypto.randomUUID(),id=crypto.randomUUID(),hash=await password(pass,salt);
-   await run('INSERT INTO users(id,username,name,salt,hash,color,seen) VALUES(?,?,?,?,?,?,?)',id,username,name,salt,hash,['#e2a650','#6d9e95','#c28068','#9292b8'][Math.floor(Math.random()*4)],now);
-   u=await one('SELECT * FROM users WHERE id=?',id);
+   await run('INSERT INTO accounts(id,username,name,salt,hash,color) VALUES(?,?,?,?,?,?)',id,username,name,salt,hash,['#e2a650','#6d9e95','#c28068','#9292b8'][Math.floor(Math.random()*4)]);
+   u=await one('SELECT * FROM accounts WHERE id=?',id);
+   if(body.village){const r=await villageAction({root,account:u,body:{action:'join',village:body.village},now});if(r.status!==200)return json(r.data,r.status);u=await one('SELECT * FROM accounts WHERE id=?',id);}
   }else if(!u||await password(pass,u.salt)!==u.hash)return json({error:'Tên đăng nhập hoặc mật khẩu chưa đúng.'},401);
   const session=crypto.randomUUID();await run('INSERT INTO sessions VALUES(?,?,?)',session,u.id,now+604800000);
-  return json({user:publicUser(u)},200,{'Set-Cookie':`td_session=${session}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${url.protocol==='https:'?'; Secure':''}`});
+  const profile=u.village_id?await villageDatabase(root,u.village_id).prepare('SELECT * FROM users WHERE id=?').bind(u.id).first():null;
+  return json({user:profile?{...publicUser(profile),village_id:u.village_id}:{id:u.id,name:u.name,village_id:null}},200,{'Set-Cookie':`td_session=${session}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${url.protocol==='https:'?'; Secure':''}`});
  }
  if(route==='logout'&&req.method==='POST'){if(token)await run('DELETE FROM sessions WHERE token=?',token);return json({ok:true},200,{'Set-Cookie':'td_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
  if(route==='state'){
@@ -56,7 +66,7 @@ export async function api(req,env){
   const progress=me?await all('SELECT task,count FROM progress WHERE user_id=? AND day=?',me.id,new Date(now+25200000).toISOString().slice(0,10)):[];
   const cases=await all('SELECT c.*,a.name AS plaintiff_name,b.name AS defendant_name,(SELECT COUNT(*) FROM votes v WHERE v.case_id=c.id) AS votes FROM cases c JOIN users a ON a.id=c.plaintiff JOIN users b ON b.id=c.defendant ORDER BY c.created DESC LIMIT 20');
   const inventory=me?await all('SELECT item,quantity FROM inventory WHERE user_id=? AND quantity>0',me.id):[];
-  return json({user:me?publicUser(me):null,players,teams,progress,cases,inventory,land,...hygiene,...await mysterySnapshot({all,run,now,me,db})});
+  return json({village,user:me?{...publicUser(me),village_id:account.village_id,is_chief:village?.owner_id===me.id}:null,players,teams,progress,cases,inventory,land,...hygiene,...await mysterySnapshot({all,run,now,me,db})});
  }
  if(!me)return json({error:'Hãy đăng nhập để cùng chơi nhé.'},401);
  if(route==='land'){if(req.method!=='POST')return json({error:'Dùng thao tác đất đai trong game.'},405);const r=await homesteads({db,me,now,one,all,run,body});return json(r.data,r.status);}

@@ -2,7 +2,7 @@ import {test} from 'node:test';import assert from 'node:assert/strict';import {D
 function fixture(){const sql=new DatabaseSync(':memory:');for(const f of readdirSync(new URL('../drizzle/',import.meta.url)).filter(n=>n.endsWith('.sql')).sort())sql.exec(readFileSync(new URL('../drizzle/'+f,import.meta.url),'utf8'));
  const wrap=(q,a=[])=>({bind:(...v)=>wrap(q,v),first:()=>sql.prepare(q).get(...a)||null,all:()=>({results:sql.prepare(q).all(...a)}),run:()=>sql.prepare(q).run(...a)}),DB={prepare:wrap,batch:s=>{sql.exec('BEGIN IMMEDIATE');try{const r=s.map(x=>x.run());sql.exec('COMMIT');return r;}catch(e){sql.exec('ROLLBACK');throw e;}}};
  const call=async(path,body,u)=>{const r=await api(new Request('https://village.test/api/'+path,{method:body?'POST':'GET',headers:{cookie:u?.cookie||'','content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}),{DB});return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};};
- const register=async n=>{const r=await call('auth',{mode:'register',username:n,name:n,password:'Synthetic-land-test-2026'});assert.equal(r.status,200);return {id:r.data.user.id,cookie:r.cookie};};
+ const register=async n=>{const r=await call('auth',{mode:'register',village:'thao-dau',username:n,name:n,password:'Synthetic-land-test-2026'});assert.equal(r.status,200);return {id:r.data.user.id,cookie:r.cookie};};
  const land=(u,action,data={})=>call('land',{action,...data},u),qty=(u,item)=>sql.prepare('SELECT quantity FROM inventory WHERE user_id=? AND item=?').get(u.id,item)?.quantity||0;
  return {sql,call,land,register,qty};
 }
