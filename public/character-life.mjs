@@ -4,14 +4,14 @@ const hatGeometry=new T.ConeGeometry(.98,.55,24),hatMaterial=new T.MeshStandardM
 const cupGeometry=new T.CylinderGeometry(.18,.13,.28,12),cupMaterial=new T.MeshStandardMaterial({color:0xb8c5a1});
 const bunGeometry=new T.SphereGeometry(.23,12,8),bunMaterial=new T.MeshStandardMaterial({color:0xf0dcad});
 const up=new T.Vector3(0,1,0),direction=new T.Vector3(),shoulder=new T.Vector3();
-export function poseCharacter(g,p,time,moving=false,forceBow=false){
+export function poseCharacter(g,p,time,moving=false,forceBow=false,chore=null){
  const d=g.userData;if(!d.life){const limbs=[new T.Mesh(armGeometry,armMaterial),new T.Mesh(armGeometry,armMaterial)];limbs.forEach(o=>{o.castShadow=true;d.body.add(o);});const hat=new T.Mesh(hatGeometry,hatMaterial);hat.position.set(0,2.72,0);d.body.add(hat);const cup=new T.Mesh(cupGeometry,cupMaterial),bun=new T.Mesh(bunGeometry,bunMaterial);d.body.add(cup,bun);d.life={limbs,hat,cup,bun};}
  const life=d.life,active=Date.now()-(p.action_at||0)<5000,action=active?p.action:'',sitting=Boolean(p.seat||p.wf_locked);
  d.body.rotation.set(0,0,0);d.body.position.y=0;d.body.scale.set(1,sitting?.74:1,1);
  g.position.y=sitting?.95:moving?Math.abs(Math.sin(time*12))*.07:0;
  if(d.shadow)d.shadow.position.y=.025-g.position.y;
  if(d.suspectRing)d.suspectRing.position.y=.11-g.position.y;
- d.armL.position.set(-.66,1,.35);d.armR.position.set(.66,1,.35);d.footL.position.set(-.36,sitting?-.4:.12,.48);d.footR.position.set(.36,sitting?-.4:.12,.48);
+ const onToilet=String(p.seat||'').startsWith('wc-'),footY=onToilet?-1:sitting?-.4:.12,footZ=onToilet?1:.48;d.armL.position.set(-.66,1,.35);d.armR.position.set(.66,1,.35);d.footL.position.set(-.36,footY,footZ);d.footR.position.set(.36,footY,footZ);
  if(moving){d.armL.position.z+=Math.sin(time*12)*.18;d.armR.position.z-=Math.sin(time*12)*.18;d.footL.position.y+=Math.max(0,Math.sin(time*12))*.2;d.footR.position.y+=Math.max(0,-Math.sin(time*12))*.2;}
  if(forceBow||active&&['bow','pray'].includes(action)){d.body.rotation.x=.9*Math.abs(Math.sin(time*2));d.body.position.y=-.2;d.armL.position.set(-.15,1.3,.7);d.armR.position.set(.15,1.3,.7);}
  if(action==='wave'){d.armR.position.set(.95+Math.sin(time*10)*.2,2.6,.2);d.body.rotation.z=Math.sin(time*3)*.04;}
@@ -24,6 +24,8 @@ export function poseCharacter(g,p,time,moving=false,forceBow=false){
  if(['drink','eat'].includes(action)){const y=1.65+Math.sin(time*2)*.15;d.armR.position.set(.22,y,.83);d.head.rotation.x=.08;}
  else d.head.rotation.x=0;
  const tense=['need_pee','need_poop'].includes(p.action)&&Date.now()-p.action_at<(p.action==='need_pee'?6000:10000);if(tense){d.body.rotation.x=.22;d.armL.position.set(-.15,.65,.75);d.armR.position.set(.15,.65,.75);d.head.rotation.z=Math.sin(time*8)*.12;}else d.head.rotation.z=0;if(d.mouth)d.mouth.scale.set(tense?.5:1,tense?1.8:.4,1);
+ if(chore?.kind==='flush'){d.body.rotation.x=.1;d.armR.position.set(.05,2.4-chore.p*.4,.86);}
+ if(chore?.kind==='wipe'){d.body.rotation.x=.5;d.armR.position.set(Math.sin(chore.phase)*.4,1.46,.58+Math.cos(chore.phase)*.12);d.armL.position.set(-.5,.95,.7);}
  life.hat.visible=Boolean(p.hat);life.cup.visible=action==='drink'||action==='water';life.cup.rotation.x=action==='water'?.8:0;life.bun.visible=action==='eat';life.cup.position.copy(d.armR.position);life.cup.position.y+=.06;life.cup.position.z+=.08;life.bun.position.copy(d.armR.position);life.bun.position.y+=.08;life.bun.position.z+=.08;
  for(let i=0;i<2;i++){const hand=i?d.armR:d.armL;shoulder.set(i?.55:-.55,1.4,0);direction.subVectors(hand.position,shoulder);const limb=life.limbs[i];limb.position.copy(shoulder).add(hand.position).multiplyScalar(.5);limb.scale.y=direction.length();limb.quaternion.setFromUnitVectors(up,direction.normalize());}
 }

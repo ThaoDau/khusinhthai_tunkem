@@ -1,4 +1,5 @@
 import {LAND_SUPPLIES,LAND_PRODUCTS} from './land-data.mjs';
+export const TOILETS=[{id:'wc-1',x:-8,z:-19,facing:0},{id:'wc-2',x:0,z:-19,facing:0},{id:'wc-3',x:8,z:-19,facing:0},{id:'wc-4',x:15,z:-19,facing:0}];
 export const BENCHES=[{id:'square-nw',x:-10,z:-7,facing:Math.PI/2},{id:'square-sw',x:-10,z:9,facing:Math.PI/2},{id:'square-ne',x:10,z:-7,facing:-Math.PI/2},{id:'square-se',x:10,z:9,facing:-Math.PI/2},{id:'pergola',x:-19,z:-2,facing:0},{id:'pond-deck',x:-20,z:-14,facing:Math.PI/2}];
 export const SHOPS=[{id:'tea',name:'Góc trà Thảo Đậu',x:-17,z:36,items:['tea','bun']},{id:'gifts',name:'Quầy quà nhỏ',x:15,z:-6,items:['hat']}];
 export const ITEMS={tea:{id:'tea',name:'Trà sen',emoji:'🍵',price:20,action:'drink',description:'Nhấp một ngụm trà, thong thả ngắm làng.'},bun:{id:'bun',name:'Bánh bao chay',emoji:'🥟',price:15,action:'eat',description:'Một chiếc bánh ấm cho chuyến đi dạo.'},hat:{id:'hat',name:'Nón lá',emoji:'👒',price:60,action:'wear',description:'Đội nón đi dạo dưới nắng. Dùng lại để cất nón.'},vegetable:{id:'vegetable',name:'Bó rau sạch',emoji:'🥬',price:0,action:'eat',description:'Rau từ vườn chung. Có thể dùng trong túi đồ.'}};

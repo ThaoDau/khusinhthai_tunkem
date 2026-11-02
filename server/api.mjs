@@ -1,5 +1,5 @@
 import {villageDatabase,villageDirectory,villageAction} from './villages.mjs';
-import {BENCHES,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
+import {BENCHES,TOILETS,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
 import {sanitation,sanitationSnapshot} from './sanitation.mjs';
 import {werewolf} from './werewolf.mjs';
@@ -73,7 +73,7 @@ export async function api(req,env){
  if(route==='werewolf'){if(req.method!=='POST')return json({error:'Dùng thao tác trong phòng Ma Sói.'},405);const w=await werewolf({db,me,now,one,all,run,body});return json(w.data,w.status);}
  if(me.wf_locked&&(['move','gesture','farm','steal','investigate','case','buy','use','action','team'].includes(route)||route==='messages'&&req.method==='POST'))return json({error:'Bạn đang ở bàn Ma Sói. Dùng bảng Ma Sói để hành động/chat hoặc rời trận.'},403);
  if(me.jailed_until>now&&['move','case'].includes(route))return json({error:'Bạn đang bị tạm giữ. Hết giờ sẽ tự trở lại làng.'},403);
- const wc=route==='toilet'&&req.method==='POST'?await sanitation({body,db,me,now,one}):null;if(wc)return json(wc.data,wc.status);
+ const wc=route==='toilet'&&req.method==='POST'?await sanitation({body,db,me,now,one,all}):null;if(wc)return json(wc.data,wc.status);
  const play=await villagePlay({route,body,db,me,now,one,all,run});if(play)return json(play.data,play.status);
  if(route==='gesture'&&req.method==='POST'){
   if(body.action==='sit'){
@@ -88,7 +88,7 @@ export async function api(req,env){
   const standing=body.action==='stand';
   if(!standing&&now-me.action_at<700)return json({error:'Chờ một chút để đổi động tác nhé.'},429);
   // Step out in front of a bench when standing, so its collision box cannot trap the player.
-  const bench=standing?BENCHES.find(b=>b.id===me.seat):null;
+  const bench=standing?[...BENCHES,...TOILETS].find(b=>b.id===me.seat):null;
   const x=bench?bench.x+Math.sin(bench.facing)*1.8:me.x,z=bench?bench.z+Math.cos(bench.facing)*1.8:me.z;
   await run('UPDATE users SET action=?,action_at=?,x=?,z=?,seat=?,position_at=? WHERE id=?',standing?'':body.action,now,x,z,standing?'':me.seat,now,me.id);
   return json({ok:true,x,z,facing:me.facing,user:publicUser(await one('SELECT * FROM users WHERE id=?',me.id))});

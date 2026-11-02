@@ -1,3 +1,4 @@
+import {TOILETS} from '../public/world-data.mjs';
 const result=(data,status=200)=>({data,status});
 const dayOf=t=>new Date(t+25200000).toISOString().slice(0,10);
 export async function sanitationSnapshot({all,one,run,db,now,me}){
@@ -12,7 +13,7 @@ export async function sanitationSnapshot({all,one,run,db,now,me}){
  await run('DELETE FROM toilet_camera WHERE created<?',now-172800000);
  return {sanitation:{today:me?await all('SELECT id,kind,created,finished,flushed,wiped FROM toilet_visits WHERE user_id=? AND day=? ORDER BY created DESC',me.id,dayOf(now)):[],stains:(await one('SELECT COUNT(*) AS n FROM toilet_visits WHERE flushed=0 OR wiped=0')).n,nextInspection:noon+86400000,bail:await all('SELECT b.incident,b.user_id,u.name,u.jailed_until FROM toilet_bail b JOIN users u ON u.id=b.user_id WHERE b.paid_by IS NULL AND u.jailed_until>?',now)}};
 }
-export async function sanitation({body,db,me,now,one}){
+export async function sanitation({body,db,me,now,one,all}){
  if(me.wf_locked||me.jailed_until>now)return result({error:'Bạn đang trong trận Ma Sói hoặc tạm giữ. Nhờ bạn bè chuộc hoặc chờ hết giờ.'},403);
  if(body.action==='bail'){
   const b=await one('SELECT b.*,u.jailed_until FROM toilet_bail b JOIN users u ON u.id=b.user_id WHERE b.incident=?',body.incident||'');
@@ -26,10 +27,14 @@ export async function sanitation({body,db,me,now,one}){
   const last=await one('SELECT * FROM toilet_visits WHERE user_id=? ORDER BY created DESC LIMIT 1',me.id);
   if(last&&now-last.created<30000)return result({error:'Chờ 30 giây giữa hai lần nhé.'},429);
   if(last&&(!last.flushed||!last.wiped))return result({error:'Hãy xả nước và lau bồn lần trước.'},400);
+  const taken=new Set((await all("SELECT seat FROM users WHERE area='toilet' AND seat LIKE 'wc-%' AND seen>? AND id!=?",now-25000,me.id)).map(u=>u.seat));
+  if(taken.has(body.stall))return result({error:'Buồng này có người rồi.'},409);
+  const stall=TOILETS.find(t=>t.id===body.stall)||TOILETS.filter(t=>!taken.has(t.id)).sort((a,b)=>Math.hypot(me.x-a.x,me.z-a.z)-Math.hypot(me.x-b.x,me.z-b.z))[0];
+  if(!stall)return result({error:'Các buồng đều có người. Chờ một chút nhé.'},409);
   const id=crypto.randomUUID(),duration=body.kind==='pee'?6000:10000;
-  const rs=await db.batch([db.prepare('INSERT INTO toilet_visits(id,user_id,day,kind,created,finished) SELECT ?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM toilet_visits WHERE user_id=? AND created>?)').bind(id,me.id,dayOf(now),body.kind,now,now+duration,me.id,now-30000),db.prepare('UPDATE users SET action=?,action_at=? WHERE id=? AND changes()>0').bind('need_'+body.kind,now,me.id)]);
+  const rs=await db.batch([db.prepare('INSERT INTO toilet_visits(id,user_id,day,kind,created,finished) SELECT ?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM toilet_visits WHERE user_id=? AND created>?) AND NOT EXISTS(SELECT 1 FROM users WHERE area=? AND seat=? AND seen>? AND id!=?)').bind(id,me.id,dayOf(now),body.kind,now,now+duration,me.id,now-30000,'toilet',stall.id,now-25000,me.id),db.prepare('UPDATE users SET action=?,action_at=?,seat=?,x=?,z=?,facing=?,position_at=?,seen=? WHERE id=? AND changes()>0').bind('need_'+body.kind,now,stall.id,stall.x,stall.z,stall.facing,now,now,me.id)]);
   if(!(rs[0].meta?.changes??rs[0].changes))return result({error:'Bạn vừa thực hiện rồi.'},409);
-  return result({ok:true,message:'Đang đi vệ sinh… xong nhớ xả nước và lau bồn.'});
+  return result({ok:true,duration,message:'Đang đi vệ sinh… xong nhớ xả nước và lau bồn.'});
  }
  if(!['flush','wipe'].includes(body.action))return result({error:'Thao tác không hợp lệ.'},400);
  const v=await one('SELECT * FROM toilet_visits WHERE id=? AND user_id=?',body.visit||'',me.id);

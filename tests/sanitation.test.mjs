@@ -21,6 +21,16 @@ test('bathroom choices require location, elapsed use, both cleaning steps and pr
  await Promise.all([wc(a,'wipe',{visit:v.id}),wc(a,'wipe',{visit:v.id})]);assert.equal(f.sql.prepare("SELECT count FROM progress WHERE task='clean'").get().count,1);assert.equal(f.coins(a),106);
  assert.equal((await wc(a,'use',{kind:'poop'})).status,429);assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM toilet_camera').get().n,1);
 });
+test('using the toilet seats players on separate free bowls and standing steps clear',async()=>{
+ const f=fixture(),a=await f.register('sit_a'),b=await f.register('sit_b');
+ for(const u of [a,b]){await f.call('state',null,u);await f.call('move',{area:'toilet'},u);}
+ assert.equal((await f.call('toilet',{action:'use',kind:'pee'},a)).data.duration,6000);assert.equal((await f.call('toilet',{action:'use',kind:'poop'},b)).data.duration,10000);
+ const seated=u=>f.sql.prepare('SELECT seat,x,z,facing FROM users WHERE id=?').get(u.id),sa=seated(a),sb=seated(b);
+ assert.match(sa.seat,/^wc-/);assert.match(sb.seat,/^wc-/);assert.notEqual(sa.seat,sb.seat);assert.equal(sa.z,-19);assert.equal(sa.facing,0);
+ assert.equal((await f.call('presence',{area:'toilet',x:sa.x+1,z:sa.z,facing:1},a)).status,200);assert.equal(seated(a).x,sa.x);
+ assert.equal((await f.call('toilet',{action:'use',kind:'pee',stall:sa.seat},await (async()=>{const c=await f.register('sit_c');await f.call('state',null,c);await f.call('move',{area:'toilet'},c);return c;})())).status,409);
+ await f.call('gesture',{action:'stand'},a);const up=seated(a);assert.equal(up.seat,'');assert.ok(up.z>-17.55);
+});
 test('noon reports hide offender, require independent votes, jail the right player and charge bail once',async()=>{
  const f=fixture(),a=await f.register('dirty_a'),b=await f.register('witness_b'),c=await f.register('witness_c');await f.call('move',{area:'toilet'},a);await f.call('move',{area:'toilet'},b);
  await f.call('toilet',{action:'use',kind:'poop'},a);f.sql.prepare('UPDATE toilet_visits SET finished=1,created=1').run();
@@ -54,4 +64,9 @@ test('sanitation detention lasts one hour, independent court votes release early
  await f.call('case',{action:'vote',id:incident.id},jurors[1]);assert.ok(f.sql.prepare('SELECT jailed_until FROM users WHERE id=?').get(a.id).jailed_until>Date.now());
  await f.call('case',{action:'vote',id:incident.id},jurors[2]);assert.equal(f.sql.prepare('SELECT jailed_until FROM users WHERE id=?').get(a.id).jailed_until,0);assert.equal(f.sql.prepare('SELECT status FROM cases WHERE id=?').get(incident.id).status,'resolved');
  f.sql.prepare("UPDATE cases SET status='open' WHERE id=?").run(incident.id);f.sql.prepare("UPDATE users SET jailed_until=1,area='jail' WHERE id=?").run(a.id);const state=(await f.call('state',null,a)).data;assert.equal(state.user.jailed_until,0);assert.equal(state.user.area,'village');assert.equal(state.cases.find(c=>c.id===incident.id).status,'resolved');
+});
+
+test('concurrent requests cannot occupy the same toilet stall',async()=>{
+ const f=fixture(),a=await f.register('race_wc_a'),b=await f.register('race_wc_b');for(const u of [a,b])await f.call('move',{area:'toilet'},u);
+ const rs=await Promise.all([a,b].map(u=>f.call('toilet',{action:'use',kind:'pee',stall:'wc-1'},u)));assert.equal(rs.filter(r=>r.status===200).length,1);assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM users WHERE seat='wc-1'").get().n,1);assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM toilet_visits').get().n,1);
 });
