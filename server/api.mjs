@@ -91,7 +91,7 @@ export async function api(req,env){
  }
  if(route==='use'&&req.method==='POST'){
   const item=ITEMS[body.item];if(!item)return json({error:'Vật phẩm không tồn tại.'},400);
-  if(item.action==='material')return json({error:'Mở Đất & nhà để dùng vật liệu xây dựng và hạt giống.'},400);
+  if(['material','produce'].includes(item.action))return json({error:'Mở Đất & nhà để dùng vật liệu hoặc tới Nhà chính quyền bán nông sản.'},400);
   if(item.action==='wear'){
    if(!await one('SELECT quantity FROM inventory WHERE user_id=? AND item=? AND quantity>0',me.id,item.id))return json({error:'Bạn chưa có món này trong túi.'},400);
    await run('UPDATE users SET hat=? WHERE id=?',me.hat?0:1,me.id);return json({ok:true});

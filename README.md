@@ -10,7 +10,7 @@ Cần Node.js 24 trở lên. Chạy `npm ci`, rồi `npm run dev`, sau đó mở
 
 ## Sổ tay trong game
 
-Bấm 📖 ở góc trên để mở Sổ tay hướng dẫn. Sổ tay có mục lục 10 phần và tìm kiếm hỗ trợ tiếng Việt không dấu; mở đầu là hướng dẫn xin đất, nhận vật liệu và xây nhà từng bước. Các mục khác gồm trồng/bán rau, nhiệm vụ, chat/đội, túi đồ/động tác, điều tra, hòa giải/tạm giữ, Ma Sói (cả cách rời bàn) và camera/độ mượt. Giá đất, xây dựng, giống rau và vật liệu đọc từ cấu hình hiện tại của game.
+Bấm 📖 ở góc trên để mở Sổ tay hướng dẫn. Sổ tay có mục lục 11 phần và tìm kiếm hỗ trợ tiếng Việt không dấu; mở đầu là hướng dẫn xin đất, nhận vật liệu và xây nhà từng bước. Các mục khác gồm trồng/bán rau, nhiệm vụ, chat/đội, túi đồ/động tác, điều tra, hòa giải/tạm giữ, Ma Sói (cả cách rời bàn) và camera/độ mượt. Giá đất, xây dựng, giống rau và vật liệu đọc từ cấu hình hiện tại của game.
 
 ## Điều khiển
 
@@ -45,6 +45,12 @@ Bấm 🏡 trên bản đồ nhỏ hoặc tới Nhà chính quyền ở phía b�
 4. Mang rau về Nhà chính quyền bán 3 xu/bó. Mua thêm gỗ 4 xu, đá 5 xu, hạt giống 2 xu. Có thể nâng vườn thành nhà kính với 40 xu, 4 gỗ, 2 đá; sau 30 giây cây sẽ lớn nhanh hơn 25%.
 
 Nhà, biển tên, vườn và giàn nhà kính hiển thị trên thế giới 3D chung. Đường dân cư nối vào làng, bản đồ nhỏ đánh dấu lô của bạn. Mái nhà ẩn khi đứng bên trong để nhìn rõ nhân vật. Chưa có chuyển nhượng đất, cho thuê hay cấp phép bởi người chơi; bản hiện tại do NPC xử lý. Xu và đất chỉ tồn tại trong trò chơi.
+
+## Chăn nuôi trong đất nhà
+
+Mở 🏡 → Khu chăn nuôi riêng, hoặc nhấn E tại biển 🐔 trong sân. Chuồng xây với 10 xu, 1 gỗ, 1 đá trong 20 giây, hoàn thành nhận một lần 1 gà mái và 3 phần thức ăn. Chuồng tối đa 3 con; mua thêm gà 12 xu hoặc bò sữa 45 xu.
+
+Gà dùng 1 thức ăn, sau 60 giây cho 2 trứng; bò dùng 2 thức ăn, sau 90 giây cho 1 sữa. Chủ đất thu sản phẩm, bạn bè có thể cho ăn giúp. Mỗi lượt thu thêm 3 điểm. Mỗi lần ăn tạo một mẻ, thu xong mới cho ăn tiếp; đồng hồ chạy cả khi offline. Quầy Nhà chính quyền bán thức ăn 2 xu, thu mua trứng 3 xu/quả và sữa 8 xu/phần. Nhà, vườn và chuồng cùng nằm trong một lô, không cần xin thêm đất.
 
 ## Ma Sói trong làng
 

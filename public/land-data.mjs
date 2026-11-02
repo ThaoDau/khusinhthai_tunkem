@@ -6,3 +6,10 @@ export const LAND_SUPPLIES={wood:{name:'Gỗ xây dựng',emoji:'🪵',price:4},
 export const LAND_CROPS={cabbage:{name:'Cải xanh',emoji:'🥬',ms:45000,yield:2,color:0x7eaa57},carrot:{name:'Cà rốt',emoji:'🥕',ms:70000,yield:3,color:0xe8a352},pumpkin:{name:'Bí đỏ',emoji:'🎃',ms:90000,yield:4,color:0xdca04b}};
 export const landBed=(lot,bed)=>({x:lot.x+5,z:lot.z-6+bed*6});
 export const isLandDistrict=(x,z)=>Math.abs(x)>57&&Math.abs(x)<94&&z>-78&&z<83;
+LAND_BUILDS.coop={name:'Chuồng chăn nuôi',emoji:'🐔',coins:10,wood:1,stone:1,ms:20000};
+LAND_SUPPLIES.feed={name:'Thức ăn chăn nuôi',emoji:'🌾',price:2};
+export const LIVESTOCK_CAPACITY=3;
+export const LIVESTOCK_TYPES={chicken:{name:'Gà mái',emoji:'🐔',price:12,feed:1,ms:60000,product:'egg',yield:2},cow:{name:'Bò sữa',emoji:'🐄',price:45,feed:2,ms:90000,product:'milk',yield:1}};
+export const LAND_PRODUCTS={vegetable:{name:'Bó rau',emoji:'🥬',price:LAND_RULES.salePrice},egg:{name:'Trứng gà',emoji:'🥚',price:3},milk:{name:'Sữa tươi',emoji:'🥛',price:8}};
+export const landPen=lot=>({x:lot.x-1,z:lot.z+6.3});
+export const landBuildDone=(p,kind)=>kind==='greenhouse'?p.garden_level===2:kind==='house'?p.house_level:kind==='coop'?p.coop_level:p.garden_level;

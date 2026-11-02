@@ -18,6 +18,7 @@ export function poseCharacter(g,p,time,moving=false,forceBow=false){
  if(action==='cheer'){d.armL.position.set(-.85,2.6,.1);d.armR.position.set(.85,2.6,.1);if(!sitting)g.position.y=Math.max(0,Math.sin(time*8))*.5;}
  if(action==='dance'){d.body.rotation.z=Math.sin(time*5)*.22;d.armL.position.set(-.9,1.6+Math.sin(time*5)*.6,.3);d.armR.position.set(.9,1.6-Math.sin(time*5)*.6,.3);if(!sitting)g.position.y=Math.abs(Math.sin(time*5))*.25;}
  if(action==='greet'){d.armL.position.set(-.12,1.5,.75);d.armR.position.set(.12,1.5,.75);d.body.rotation.x=.14;}
+ if(action==='animal_feed'){d.armR.position.set(.45,1,1+Math.sin(time*6)*.2);d.armL.position.set(-.2,1.15,.65);d.body.rotation.x=.15;}
  if(action==='water'){d.armR.position.set(.65,1.1,1.1);d.armL.position.set(-.2,1.2,.7);d.body.rotation.x=.2;}
  if(action==='harvest'||action==='steal'){d.body.rotation.x=.5+Math.sin(time*4)*.1;d.armL.position.set(-.4,.7,1.1);d.armR.position.set(.4,.7+Math.sin(time*5)*.2,1.1);}
  if(['drink','eat'].includes(action)){const y=1.65+Math.sin(time*2)*.15;d.armR.position.set(.22,y,.83);d.head.rotation.x=.08;}
