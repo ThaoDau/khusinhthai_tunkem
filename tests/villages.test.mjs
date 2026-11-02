@@ -17,7 +17,7 @@ test('new accounts choose a village, founders become chiefs and village data can
  const va=av.data.village,vb=bv.data.village;assert.notEqual(va,vb);
  assert.equal((await f.call('villages',{action:'join',village:va},guest)).status,200);
  let as=(await f.call('state',null,a)).data,bs=(await f.call('state',null,b)).data;
- assert.equal(as.user.is_chief,true);assert.equal(as.village.owner_id,a.id);assert.equal(as.players.length,2);assert.equal(bs.players.length,1);assert.ok(!as.players.some(p=>p.id===b.id));assert.equal(as.land.parcels.length,12);assert.equal(bs.land.parcels.length,12);
+ assert.equal(as.user.area,'village');assert.equal(bs.user.area,'village');assert.equal(as.user.x,0);assert.equal(as.user.z,10);assert.equal(as.user.is_chief,true);assert.equal(as.village.owner_id,a.id);assert.equal(as.players.length,2);assert.equal(bs.players.length,1);assert.ok(!as.players.some(p=>p.id===b.id));assert.equal(as.land.parcels.length,12);assert.equal(bs.land.parcels.length,12);
  await f.call('messages',{channel:'global',body:'Chỉ làng Sen Xanh thấy'},a);assert.equal((await f.call('messages?channel=global',null,guest)).data.messages.length,1);assert.equal((await f.call('messages?channel=global',null,b)).data.messages.length,0);
  assert.equal((await f.call('messages',{channel:'private',recipient:b.id,body:'Không xuyên làng'},a)).status,400);
  const t=await f.call('team',{action:'create',name:'Đội Sen'},a);assert.equal(t.status,200);as=(await f.call('state',null,a)).data;assert.equal((await f.call('team',{action:'join',id:as.user.team},b)).status,404);

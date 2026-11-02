@@ -28,6 +28,7 @@ test('multiplayer accounts, private channels, teams, tasks and court',async()=>{
  await call('messages',{channel:'team',body:'Bí mật hội sen'},a.cookie);
  assert.equal((await call('messages?channel=team',null,b.cookie)).data.messages[0].body,'Bí mật hội sen');
  assert.equal((await call('messages?channel=team',null,c.cookie)).status,400);
+ await call('move',{area:'temple'},a.cookie);
  for(let i=0;i<4;i++){sqlite.prepare('UPDATE users SET action_at=0 WHERE id=?').run(a.data.user.id);const r=await call('action',{task:'bow'},a.cookie);assert.equal(r.data.reward,i<3?30:0);}
  assert.equal((await call('state',null,a.cookie)).data.user.points,90);
  assert.equal((await call('presence',{area:'temple',x:1,z:11,facing:1},a.cookie)).status,200);

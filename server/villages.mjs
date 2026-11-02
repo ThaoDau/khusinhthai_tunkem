@@ -32,7 +32,7 @@ export async function villageAction({root,account,body,now}){
   steps.push(root.prepare('INSERT INTO villages(id,name,description,owner_id,created) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM accounts WHERE id=? AND village_id IS NULL)').bind(id,name,description,account.id,now,account.id));
  }
  const membershipIndex=steps.length;
- steps.push(root.prepare('UPDATE accounts SET village_id=? WHERE id=? AND village_id IS NULL AND EXISTS(SELECT 1 FROM villages WHERE id=?)').bind(id,account.id,id),db.prepare('INSERT INTO users(id,username,name,salt,hash,color,seen) SELECT ?,?,?,?,?,?,? WHERE changes()>0').bind(account.id,account.username,account.name,account.salt,account.hash,account.color,now));
+ steps.push(root.prepare('UPDATE accounts SET village_id=? WHERE id=? AND village_id IS NULL AND EXISTS(SELECT 1 FROM villages WHERE id=?)').bind(id,account.id,id),db.prepare("INSERT INTO users(id,username,name,salt,hash,color,seen,area,x,z) SELECT ?,?,?,?,?,?,?,'village',0,10 WHERE changes()>0").bind(account.id,account.username,account.name,account.salt,account.hash,account.color,now));
  const rs=await root.batch(steps);if(!(rs[membershipIndex].meta?.changes??rs[membershipIndex].changes))return result({error:'Bạn vừa chọn làng ở cửa sổ khác. Tải lại để tiếp tục.'},409);
  return result({ok:true,message:a==='create'?'Làng mới đã ra đời! Bạn là trưởng làng.':'Chào mừng cư dân mới!',village:id});
 }
