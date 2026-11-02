@@ -72,10 +72,11 @@ export async function villagePlay(ctx){
  if(votes.n<c.quorum)return result({ok:true,message:`Đã ghi nhận phiếu. Cần ${c.quorum} phiếu độc lập để đối chiếu bằng chứng.`});
  if(body.suspect!==c.culprit){eliminated.push(body.suspect);await run('UPDATE incidents SET eliminated=? WHERE id=? AND status=?',JSON.stringify(eliminated),c.id,'open');return result({ok:true,message:'Đối chiếu bằng chứng: nghi phạm này không lấy đồ và được loại trừ. Không ai bị nhốt nhầm.'});}
  const culprit=await one('SELECT name FROM users WHERE id=?',c.culprit);
- const rs=await db.batch([db.prepare("UPDATE incidents SET status='solved',solved_name=? WHERE id=? AND status='open'").bind(culprit.name,c.id),db.prepare("UPDATE users SET area='jail',x=0,z=0,seat='',action='',jailed_until=?,coins=MAX(0,coins-10),position_at=? WHERE id=? AND changes()>0").bind(now+JAIL_SECONDS*1000,now,c.culprit)]);
+ const rs=await db.batch([db.prepare("UPDATE incidents SET status='solved',solved_name=? WHERE id=? AND status='open'").bind(culprit.name,c.id),db.prepare("UPDATE users SET area='jail',x=0,z=0,seat='',action='',jailed_until=?,coins=MAX(0,coins-10),position_at=? WHERE id=? AND changes()>0").bind(now+(c.item==='sanitation'?3600000:JAIL_SECONDS*1000),now,c.culprit)]);
  if(!changes(rs[0]))return result({error:'Vụ việc vừa được giải quyết.'},409);
- if(c.item==='sanitation')await run('INSERT OR IGNORE INTO toilet_bail(incident,user_id) VALUES(?,?)',c.id,c.culprit);
+ if(c.item==='sanitation')await db.batch([db.prepare('INSERT OR IGNORE INTO toilet_bail(incident,user_id) VALUES(?,?)').bind(c.id,c.culprit),db.prepare('INSERT OR IGNORE INTO cases(id,plaintiff,defendant,reason,created) VALUES(?,?,?,?,?)').bind(c.id,me.id,c.culprit,'[Nhà xí] Chờ xét xử vụ bỏ bồn chưa xả/lau. Tạm giữ tối đa 1 tiếng. Cần 3 cư dân độc lập đồng ý cho về sớm; có thể chuộc 20 xu trong game.',now)]);
  await run('UPDATE inventory SET quantity=MAX(0,quantity-1) WHERE user_id=? AND item=?',c.culprit,c.item);
   if(c.item==='hat')await run("UPDATE users SET hat=0 WHERE id=? AND NOT EXISTS(SELECT 1 FROM inventory WHERE user_id=? AND item='hat' AND quantity>0)",c.culprit,c.culprit);
+ if(c.item==='sanitation')return result({ok:true,message:`Đã xác định ${culprit.name}. Tạm giữ tối đa 1 tiếng chờ phiên tòa. Hồ sơ đã chuyển tới Phòng xét xử.`});
  return result({ok:true,message:`Đúng thủ phạm: ${culprit.name}. Tạm giữ ${JAIL_SECONDS} giây và thu hồi món đồ còn lại.`});
 }

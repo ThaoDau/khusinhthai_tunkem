@@ -40,3 +40,18 @@ test('inspection waits for noon and cleaned visits never create reports',async()
  await sanitationSnapshot({db,one,all,run,now:noon,me:null});assert.equal((await one('SELECT COUNT(*) n FROM incidents')).n,1);
  f.sql.prepare('UPDATE toilet_visits SET flushed=1,wiped=1,incident=NULL').run();f.sql.prepare('DELETE FROM incidents').run();await sanitationSnapshot({db,one,all,run,now:noon+86400000,me:null});assert.equal((await one('SELECT COUNT(*) n FROM incidents')).n,0);
 });
+
+test('sanitation detention lasts one hour, independent court votes release early, expiry releases automatically',async()=>{
+ const f=fixture(),a=await f.register('trial_a'),reporter=await f.register('trial_report'),voters=await Promise.all(['trial_one','trial_two','trial_three'].map(n=>f.register(n)));
+ await f.call('move',{area:'toilet'},a);await f.call('toilet',{action:'use',kind:'pee'},a);f.sql.prepare('UPDATE toilet_visits SET created=1,finished=1').run();
+ const incident=(await f.call('state',null,reporter)).data.incidents.find(i=>i.item==='sanitation');
+ for(const u of [reporter,...voters])await f.call('investigate',{incident:incident.id,suspect:a.id},u);
+ const held=f.sql.prepare('SELECT jailed_until FROM users WHERE id=?').get(a.id).jailed_until;assert.ok(held-Date.now()>3590000&&held-Date.now()<=3600000);
+ const hearing=f.sql.prepare('SELECT * FROM cases WHERE id=?').get(incident.id);assert.equal(hearing.status,'open');
+ const plaintiff=[reporter,...voters].find(u=>u.id===hearing.plaintiff);assert.equal((await f.call('case',{action:'reconcile',id:incident.id},plaintiff)).status,403);
+ const jurors=[reporter,...voters].filter(u=>u.id!==hearing.plaintiff);
+ await f.call('case',{action:'vote',id:incident.id},jurors[0]);await f.call('case',{action:'vote',id:incident.id},jurors[0]);assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM votes WHERE case_id=?').get(incident.id).n,1);
+ await f.call('case',{action:'vote',id:incident.id},jurors[1]);assert.ok(f.sql.prepare('SELECT jailed_until FROM users WHERE id=?').get(a.id).jailed_until>Date.now());
+ await f.call('case',{action:'vote',id:incident.id},jurors[2]);assert.equal(f.sql.prepare('SELECT jailed_until FROM users WHERE id=?').get(a.id).jailed_until,0);assert.equal(f.sql.prepare('SELECT status FROM cases WHERE id=?').get(incident.id).status,'resolved');
+ f.sql.prepare("UPDATE cases SET status='open' WHERE id=?").run(incident.id);f.sql.prepare("UPDATE users SET jailed_until=1,area='jail' WHERE id=?").run(a.id);const state=(await f.call('state',null,a)).data;assert.equal(state.user.jailed_until,0);assert.equal(state.user.area,'village');assert.equal(state.cases.find(c=>c.id===incident.id).status,'resolved');
+});

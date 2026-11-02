@@ -22,7 +22,7 @@ export async function api(req,env){
  const token=req.headers.get('cookie')?.match(/(?:^|;\s*)td_session=([a-f0-9-]+)/)?.[1];
  let me=token?await one('SELECT u.* FROM users u JOIN sessions s ON u.id=s.user_id WHERE s.token=? AND s.expires>?',token,now):null;
  if(me?.jailed_until){
-  if(me.jailed_until<=now){await run("UPDATE users SET jailed_until=0,area='village',x=52,z=53,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
+  if(me.jailed_until<=now){await run("UPDATE cases SET status='resolved' WHERE defendant=? AND id LIKE 'wc-%' AND status='open'",me.id);await run("UPDATE users SET jailed_until=0,area='village',x=52,z=53,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
   else if(me.area!=='jail'){await run("UPDATE users SET area='jail',x=0,z=0,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
  }
  if(route==='auth'&&req.method==='POST'){
@@ -151,6 +151,15 @@ export async function api(req,env){
   await run('UPDATE users SET team=? WHERE id=?',id,me.id);return json({ok:true});
  }
  if(route==='case'&&req.method==='POST'){
+  if(['vote','reconcile'].includes(body.action)&&String(body.id||'').startsWith('wc-')){
+   const c=await one("SELECT * FROM cases WHERE id=? AND status='open'",body.id);
+   if(!c)return json({error:'Phiên xét xử đã khép lại.'},400);
+   if(body.action!=='vote'||[c.plaintiff,c.defendant].includes(me.id))return json({error:'Cần cư dân ngoài vụ việc bỏ phiếu cho về sớm.'},403);
+   await run('INSERT OR IGNORE INTO votes VALUES(?,?)',c.id,me.id);
+   const v=await one('SELECT COUNT(*) AS n FROM votes WHERE case_id=?',c.id);
+   if(v.n>=3)await db.batch([db.prepare("UPDATE cases SET status='resolved' WHERE id=? AND status='open'").bind(c.id),db.prepare("UPDATE users SET jailed_until=0,area='village',x=52,z=53,position_at=? WHERE id=? AND changes()>0 AND jailed_until>?").bind(now,c.defendant,now)]);
+   return json({ok:true});
+  }
   if(body.action==='vote'){
    const c=await one('SELECT * FROM cases WHERE id=? AND status=?',body.id,'open');if(!c)return json({error:'Phiên hòa giải đã kết thúc.'},400);
    if([c.plaintiff,c.defendant].includes(me.id))return json({error:'Người trong vụ việc không tự bỏ phiếu.'},400);
