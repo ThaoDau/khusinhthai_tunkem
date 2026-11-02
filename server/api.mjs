@@ -30,7 +30,7 @@ export async function api(req,env){
  const village=await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id WHERE v.id=?').bind(account?.village_id||'thao-dau').first();
  if(route==='state'&&account&&!account.village_id)return json({user:{id:account.id,name:account.name,village_id:null},players:[],teams:[],progress:[],cases:[],inventory:[],needs_village:true,village:null});
  if(me?.jailed_until){
-  if(me.jailed_until<=now){await run("UPDATE cases SET status='resolved' WHERE defendant=? AND id LIKE 'wc-%' AND status='open'",me.id);await run("UPDATE users SET jailed_until=0,area='village',x=52,z=53,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
+  if(me.jailed_until<=now){await run("UPDATE cases SET status='resolved' WHERE defendant=? AND id LIKE 'wc-%' AND status='open'",me.id);await run("UPDATE users SET jailed_until=0,area='village',x=50,z=75,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
   else if(me.area!=='jail'){await run("UPDATE users SET area='jail',x=0,z=0,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}
  }
  if(route==='auth'&&req.method==='POST'){
@@ -127,7 +127,7 @@ export async function api(req,env){
   if(!AREAS.includes(body.area))return json({error:'Khu vực không tồn tại.'},400);
   if(body.area==='werewolf'&&!me.wf_room)return json({error:'Hãy tạo hoặc tham gia phòng Ma Sói trước.'},400);
   if(me.wf_room&&!me.wf_locked)await run('UPDATE users SET wf_room=NULL WHERE id=?',me.id);
-  const exits={temple:[0,-24],church:[39,-19],pond:[-34,-7],kitchen:[-34,28],garden:[34,21],toilet:[-34,59],meeting:[3,60],court:[37,56],jail:[52,53],government:[-29,-49]};
+  const exits={temple:[0,-32.5],church:[43,-24],pond:[-34,-8],kitchen:[-39,28],garden:[34,20],toilet:[-39,59],meeting:[0,65],court:[37,58],jail:[50,75],government:[-34,-56]};
   if(body.area==='toilet'&&me.area!=='toilet')await run('INSERT INTO toilet_camera VALUES(?,?,?,?)',crypto.randomUUID(),me.id,me.name,now);
   const [x,z]=body.area==='village'?(exits[me.area]||[0,10]):[0,10];
   await run("UPDATE users SET area=?,action=?,seat='',seen=?,x=?,z=?,facing=0,position_at=? WHERE id=?",body.area,'',now,x,z,now,me.id);return json({ok:true,x,z});
@@ -167,7 +167,7 @@ export async function api(req,env){
    if(body.action!=='vote'||[c.plaintiff,c.defendant].includes(me.id))return json({error:'Cần cư dân ngoài vụ việc bỏ phiếu cho về sớm.'},403);
    await run('INSERT OR IGNORE INTO votes VALUES(?,?)',c.id,me.id);
    const v=await one('SELECT COUNT(*) AS n FROM votes WHERE case_id=?',c.id);
-   if(v.n>=3)await db.batch([db.prepare("UPDATE cases SET status='resolved' WHERE id=? AND status='open'").bind(c.id),db.prepare("UPDATE users SET jailed_until=0,area='village',x=52,z=53,position_at=? WHERE id=? AND changes()>0 AND jailed_until>?").bind(now,c.defendant,now)]);
+   if(v.n>=3)await db.batch([db.prepare("UPDATE cases SET status='resolved' WHERE id=? AND status='open'").bind(c.id),db.prepare("UPDATE users SET jailed_until=0,area='village',x=50,z=75,position_at=? WHERE id=? AND changes()>0 AND jailed_until>?").bind(now,c.defendant,now)]);
    return json({ok:true});
   }
   if(body.action==='vote'){

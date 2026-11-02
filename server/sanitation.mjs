@@ -17,7 +17,7 @@ export async function sanitation({body,db,me,now,one}){
  if(body.action==='bail'){
   const b=await one('SELECT b.*,u.jailed_until FROM toilet_bail b JOIN users u ON u.id=b.user_id WHERE b.incident=?',body.incident||'');
   if(!b||b.paid_by||b.jailed_until<=now||b.user_id===me.id)return result({error:'Không có người bạn cần chuộc.'},400);
-  const rs=await db.batch([db.prepare('UPDATE users SET coins=coins-20 WHERE id=? AND coins>=20 AND EXISTS(SELECT 1 FROM toilet_bail WHERE incident=? AND paid_by IS NULL)').bind(me.id,b.incident),db.prepare('UPDATE toilet_bail SET paid_by=? WHERE incident=? AND paid_by IS NULL AND changes()>0').bind(me.id,b.incident),db.prepare("UPDATE users SET jailed_until=0,area='village',x=52,z=53,position_at=? WHERE id=? AND changes()>0").bind(now,b.user_id),db.prepare("UPDATE cases SET status='resolved' WHERE id=? AND changes()>0").bind(b.incident)]);
+  const rs=await db.batch([db.prepare('UPDATE users SET coins=coins-20 WHERE id=? AND coins>=20 AND EXISTS(SELECT 1 FROM toilet_bail WHERE incident=? AND paid_by IS NULL)').bind(me.id,b.incident),db.prepare('UPDATE toilet_bail SET paid_by=? WHERE incident=? AND paid_by IS NULL AND changes()>0').bind(me.id,b.incident),db.prepare("UPDATE users SET jailed_until=0,area='village',x=50,z=75,position_at=? WHERE id=? AND changes()>0").bind(now,b.user_id),db.prepare("UPDATE cases SET status='resolved' WHERE id=? AND changes()>0").bind(b.incident)]);
   return (rs[0].meta?.changes??rs[0].changes)?result({ok:true,message:'Đã trả 20 xu trong game, bạn của bạn được về làng.'}):result({error:'Chưa đủ 20 xu hoặc đã có người chuộc.'},409);
  }
  if(me.area!=='toilet')return result({error:'Hãy đến Nhà xí trước.'},400);

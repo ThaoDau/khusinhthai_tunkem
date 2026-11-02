@@ -23,8 +23,8 @@ export function buildLandscape({stage,scene,locations,block}) {
  const roofMat=new T.MeshStandardMaterial({map:tile,roughness:.82,color:0xe5bb87,side:T.DoubleSide});materials.set('roof',roofMat);
  mesh(geo('BoxGeometry',[205,.02,205]),groundMat,0,-.085,0);
  function pave(x,z,w,d){const p=mesh(geo('BoxGeometry',[w,.07,d]),paveMat,x,.075,z);p.castShadow=false;for(const offset of [-1,1]){box(x+offset*(w/2+.15),.13,z,.22,.2,d,0xb2a48b);}}
- pave(0,10,13,140);for(const [x,z,w,d]of [[13.5,-19,64,8.5],[-17,-7,36,4],[0,24,132,8.5],[0,64,132,8.5],[-14,-49,30,4]]){const p=mesh(geo('BoxGeometry',[w,.06,d]),paveMat,x,.12,z);p.castShadow=false;for(const side of [-1,1])box(x,.15,z+side*(d/2+.15),w,.2,.22,0xb3a68b);}
- for(const x of [-62,62])pave(x,3,5,152);
+ pave(0,12,13,156);for(const [x,z,w,d]of [[15,-22,70,8.5],[-17,-7,36,4],[0,28,132,8.5],[0,65,132,8.5],[-17,-56,36,4],[25,78,50,4]]){const p=mesh(geo('BoxGeometry',[w,.06,d]),paveMat,x,.12,z);p.castShadow=false;for(const side of [-1,1])box(x,.15,z+side*(d/2+.15),w,.2,.22,0xb3a68b);}
+ for(const x of [-62,62])pave(x,5,5,164);
  // A circular village square replaces the empty intersection.
  cyl(0,.16,1,16,16,.13,0xb5a48a);cyl(0,.25,1,15.5,15.5,.05,0xd7c5a3);
  const square=mesh(geo('RingGeometry',[4.8,15.1,64]),paveMat,0,.29,1);square.rotation.x=-Math.PI/2;square.castShadow=false;
@@ -50,6 +50,8 @@ export function buildLandscape({stage,scene,locations,block}) {
  for(const l of locations){const {x,z}=l;if(['pond','garden'].includes(l.id))continue;
   const w=l.id==='temple'?22:l.id==='jail'?10:17,d=l.id==='temple'?17:l.id==='jail'?10:14,front=z+d/2;
   mesh(geo('BoxGeometry',[w+3,.1,5]),paveMat,x,.14,front+3);
+  const lane=[-56,-22,28,65,78].sort((a,b)=>Math.abs(a-(front+5))-Math.abs(b-(front+5)))[0],length=Math.abs(lane-(front+5));
+  if(length>.2){const path=mesh(geo('BoxGeometry',[4,.06,length+.6]),paveMat,x,.13,(lane+front+5)/2);path.castShadow=false;}
   for(let i=0;i<3;i++)box(x,.2+i*.16,front+3-i*.5,5+i*.15,.25,.6,0xc9ba98);
   for(const side of [-1,1]){const ox=x+side*(w/2-1.5);flowers(ox,front+3.2,1);hedge(x+side*(w/2+2.8),z,2,d-1);box(x+side*(w/2+.08),3.8,z, .14,2.2,3.1,0x546d5d);box(x+side*(w/2+.17),3.8,z,.16,.12,3.3,0xdbbd87);box(x+side*(w/2+.17),3.8,z,.17,2.3,.12,0xdbbd87);}
   for(const side of [-1,1]){box(x+side*(w/2+1),7.65,z,.25,.3,d+3,0x6f4930);box(x,7.65,z+side*(d/2+1),w+3,.3,.25,0x6f4930);}
@@ -84,13 +86,13 @@ export function buildLandscape({stage,scene,locations,block}) {
  for(const z of [-22,-7,12,31,66])for(const x of [-8.2,8.2])post(x,z);
  for(const z of [-11,19,68]){for(const x of [-8,8])box(x,3.5,z,.16,7,.16,0x8c764e);const points=[];for(let i=0;i<=20;i++){const x=-8+i*.8;points.push(new T.Vector3(x,6.6-Math.sin(i/20*Math.PI)*1.2,z));}const curve=new T.CatmullRomCurve3(points);mesh(new T.TubeGeometry(curve,24,.025,4,false),mat(0x665b40),0,0,0);for(let i=0;i<7;i++){const x=-6+i*2,y=6.6-Math.sin((x+8)/16*Math.PI)*1.2;const lamp=mesh(geo('SphereGeometry',[.26,10,8]),mat(i%2?0xf5d9a0:0xdba36c,{emissive:0xeab05d,emissiveIntensity:.35}),x,y-.4,z);lamp.scale.y=1.35;}}
  // Gateway and continuous planting form a clear, lush village boundary.
- for(const x of [-7,7]){box(x,3.8,78,.7,7.6,.7,0x8f7851);flowers(x,78,1.5);}
- box(0,7.4,78,16,.6,1.5,0x785b3c);box(0,7.9,78,17,.4,2.4,0x9a784c);textSign('KHU SINH THÁI THẢO ĐẬU',0,6.4,78.8,1.5);
- fence(-34,77,48);fence(34,77,48);fence(-91,3,152,Math.PI/2);fence(91,3,152,Math.PI/2);
+ for(const x of [-7,7]){box(x,3.8,85,.7,7.6,.7,0x8f7851);flowers(x,85,1.5);}
+ box(0,7.4,85,16,.6,1.5,0x785b3c);box(0,7.9,85,17,.4,2.4,0x9a784c);textSign('KHU SINH THÁI THẢO ĐẬU',0,6.4,85.8,1.5);
+ fence(-34,84,48);fence(34,84,48);fence(-91,3,152,Math.PI/2);fence(91,3,152,Math.PI/2);
  for(let i=0;i<130;i++){const a=i*2.399,rr=65+(i%6)*5,x=Math.cos(a)*rr,z=10+Math.sin(a)*rr;if(isLandDistrict(x,z)||locations.some(l=>Math.hypot(l.x-x,l.z-z)<15))continue;instance('leaf',[0x557b59,0x6d8e5c,0x7b995e][i%3],x,2+(i%3),z,2.8,3.6,2.8);instance('trunk',0x826849,x,.9,z,.24,2,.24);}
  const safe=(x,z)=>Math.abs(x)>8&&locations.every(l=>Math.abs(x-l.x)>14||Math.abs(z-l.z)>15)&&Math.abs(z+19)>6&&Math.abs(z-24)>6&&Math.abs(z-46)>6&&Math.abs(z-64)>6&&Math.hypot(x,z-1)>17;
  for(let i=0;i<650;i++){const x=(random()-.5)*116,z=(random()-.5)*120+10;if(!safe(x,z))continue;instance('grass',i%2?0x78935d:0xa1ac6c,x,.15,z,.1+random()*.15,.2+random()*.3,.1,random()*Math.PI);if(i%5===0)instance('flower',i%2?0xeac08e:0xe4b0a6,x,.45,z,.1,.12,.1);}
- for(const [x,z,w,d]of [[-16,48,4,15],[17,49,3,13],[-51,-2,3,11],[52,-9,3,12],[-16,-39,3,13],[19,-40,3,13],[-16,19,3,8]])hedge(x,z,w,d);
+ for(const [x,z,w,d]of [[-16,48,4,15],[17,49,3,13],[-51,-2,3,11],[52,-9,3,12],[-18,-44,2,10],[20,-45,2,10],[-16,19,3,8]])hedge(x,z,w,d);
  for(let i=0;i<10;i++){const a=i*Math.PI/5;const hill=ball(Math.cos(a)*137,-4,Math.sin(a)*137,20,0x8fa280);hill.scale.set(2,1.1,1.6);hill.castShadow=false;}
  for(const data of planting.values()){const g=data.type==='trunk'?geo('CylinderGeometry',[.7,1,1,7]):data.type==='grass'?geo('ConeGeometry',[1,1,3]):geo('SphereGeometry',[1,data.type==='flower'?6:8,6]);const o=new T.InstancedMesh(g,mat(data.color),data.items.length),dummy=new T.Object3D();data.items.forEach((p,i)=>{dummy.position.set(p.x,p.y,p.z);dummy.scale.set(p.sx,p.sy,p.sz);dummy.rotation.y=p.rotation;dummy.updateMatrix();o.setMatrixAt(i,dummy.matrix);});o.castShadow=data.type==='leaf';o.receiveShadow=true;o.instanceMatrix.needsUpdate=true;root.add(o);}
  stone.repeat.set(1,1);root.traverse(o=>{if(o.isMesh&&o.material===paveMat){const p=o.geometry.attributes.position,uv=[];for(let i=0;i<p.count;i++)uv.push(p.getX(i)/6,(o.geometry.type==='RingGeometry'?p.getY(i):p.getZ(i))/6);o.geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));}});
