@@ -1,4 +1,4 @@
-import {villageDatabase,villageDirectory,villageAction} from './villages.mjs';
+import {villageDatabase,villageDirectory,villageAction,brandVillage} from './villages.mjs';
 import {BENCHES,TOILETS,SHOPS,ITEMS,GESTURES} from '../public/world-data.mjs';
 import {villagePlay,mysterySnapshot} from './village-play.mjs';
 import {sanitation,sanitationSnapshot} from './sanitation.mjs';
@@ -27,7 +27,8 @@ export async function api(req,env){
  if(!['auth','logout'].includes(route)&&account?.village_id)db=villageDatabase(root,account.village_id);
  let me=account?.village_id?await one('SELECT * FROM users WHERE id=?',account.id):null;
  if(!['auth','logout','state'].includes(route)&&account&&!account.village_id)return json({error:'Hãy lập làng hoặc gia nhập làng trước.'},403);
- const village=await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id WHERE v.id=?').bind(account?.village_id||'thao-dau').first();
+ const villageRow=await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id WHERE v.id=?').bind(account?.village_id||'thao-dau').first();
+ const village=brandVillage(villageRow);
  if(route==='state'&&account&&!account.village_id)return json({user:{id:account.id,name:account.name,village_id:null},players:[],teams:[],progress:[],cases:[],inventory:[],needs_village:true,village:null});
  if(me?.jailed_until){
   if(me.jailed_until<=now){await run("UPDATE cases SET status='resolved' WHERE defendant=? AND id LIKE 'wc-%' AND status='open'",me.id);await run("UPDATE users SET jailed_until=0,area='village',x=50,z=75,seat='',action='',position_at=? WHERE id=?",now,me.id);me=await one('SELECT * FROM users WHERE id=?',me.id);}

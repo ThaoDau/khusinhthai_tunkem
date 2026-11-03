@@ -1,3 +1,4 @@
+export const brandVillage=v=>v&&v.id==='thao-dau'&&v.name==='Thảo Đậu'?{...v,name:'Khu sinh thái Địa Ngục'}:v;
 // Accounts and sessions are global. Every village owns an isolated set of gameplay tables.
 export const GAME_TABLES=['users','teams','messages','progress','cases','votes','inventory','garden_plots','incidents','incident_votes','wf_rooms','wf_messages','land_parcels','land_beds','land_log','land_animals','toilet_visits','toilet_camera','toilet_bail'];
 export function villageDatabase(root,id){
@@ -7,7 +8,7 @@ export function villageDatabase(root,id){
  const sql=s=>s.replace(/'(?:''|[^'])*'|[A-Za-z_][A-Za-z_0-9]*/g,t=>names.has(t)?prefix+t:t);
  return {prepare:s=>root.prepare(sql(s)),batch:ss=>root.batch(ss)};
 }
-export async function villageDirectory(root){return (await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name,(SELECT COUNT(*) FROM accounts m WHERE m.village_id=v.id) AS members FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id ORDER BY v.created,v.id LIMIT 100').all()).results;}
+export async function villageDirectory(root){return (await root.prepare('SELECT v.id,v.name,v.description,v.owner_id,a.name AS chief_name,(SELECT COUNT(*) FROM accounts m WHERE m.village_id=v.id) AS members FROM villages v LEFT JOIN accounts a ON a.id=v.owner_id ORDER BY v.created,v.id LIMIT 100').all()).results.map(brandVillage);}
 export async function villageAction({root,account,body,now}){
  const result=(data,status=200)=>({data,status}),a=body.action;
  if(a==='edit'){

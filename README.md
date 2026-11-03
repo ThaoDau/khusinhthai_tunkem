@@ -1,4 +1,4 @@
-# Khu sinh thái Thảo Đậu 🌿
+# Khu sinh thái Địa Ngục 🌿
 
 Trò chơi cộng đồng 3D bằng tiếng Việt. Three.js dựng thế giới chiếm toàn màn hình: chánh điện với cột đỏ, sàn gỗ, tượng Phật và các khu nhà nằm gần nhau trong cùng một bản đồ làng.
 
@@ -92,6 +92,6 @@ Cũng có thể triển khai Node lên VPS/hosting hỗ trợ Node 24, đặt pr
 Mỗi ngày Việt Nam: hoàn thành 2 lần đi tiểu/đi nặng, xả nước và lau bồn. Camera chỉ ghi cửa; cô lao công kiểm tra 12:00 (xử lý khi có lượt truy cập nếu làng vắng). Bỏ bẩn tạo vụ việc cần 2–3 phiếu độc lập, chọn sai không nhốt. Tạm giữ tối đa 1 tiếng chờ phiên tòa; 3 cư dân ngoài vụ việc có thể bỏ phiếu cho về sớm, bạn bè có thể chuộc 20 xu game.
 
 ## Nhiều làng và trưởng làng
-Tài khoản mới chọn lập làng miễn phí hoặc gia nhập sau đăng ký. Người lập là trưởng làng, sửa tên và lời giới thiệu. Mỗi tài khoản thuộc một làng cố định; chưa hỗ trợ chuyển làng, chuyển quyền, bầu cử hoặc xóa làng. Cư dân cũ và toàn bộ tài sản được giữ ở Thảo Đậu; làng cũ chưa tự gán trưởng làng.
+Tài khoản mới chọn lập làng miễn phí hoặc gia nhập sau đăng ký. Người lập là trưởng làng, sửa tên và lời giới thiệu. Mỗi tài khoản thuộc một làng cố định; chưa hỗ trợ chuyển làng, chuyển quyền, bầu cử hoặc xóa làng. Cư dân cũ và toàn bộ tài sản được giữ ở Địa Ngục; làng cũ chưa tự gán trưởng làng.
 Mỗi làng có một thế giới cùng bố cục, 12 lô đất, cư dân/chat/đội/nhiệm vụ/điều tra/tạm giữ/Ma Sói riêng. Tài khoản và phiên đăng nhập dùng chung, dữ liệu chơi được định tuyến phía máy chủ từ làng đã gắn với tài khoản, không lấy làng do máy khách tự khai.
-Bảng gameplay ở làng mới được tạo với tiền tố ID làng từ schema hiện tại, trong cùng giao dịch với việc lập làng. Khi thêm migration gameplay trong tương lai phải nâng schema của cả các bảng có tiền tố trước khi phát hành, ngoài schema gốc của Thảo Đậu.
+Bảng gameplay ở làng mới được tạo với tiền tố ID làng từ schema hiện tại, trong cùng giao dịch với việc lập làng. Khi thêm migration gameplay trong tương lai phải nâng schema của cả các bảng có tiền tố trước khi phát hành, ngoài schema gốc của Địa Ngục.

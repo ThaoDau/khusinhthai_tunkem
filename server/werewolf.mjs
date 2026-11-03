@@ -17,7 +17,7 @@ export async function werewolf(ctx){
   }
   if(action==='create'){
    if(me.wf_room)throw Error('Bạn đang ở một phòng Ma Sói.');
-   const id=crypto.randomUUID(),title=typeof body.title==='string'?body.title.trim().slice(0,36)||'Đêm Thảo Đậu':'Đêm Thảo Đậu',s=createWolfRoom(me,now);arrange(s);const seat=s.players[0].seat;
+   const id=crypto.randomUUID(),title=typeof body.title==='string'?body.title.trim().slice(0,36)||'Đêm Địa Ngục':'Đêm Địa Ngục',s=createWolfRoom(me,now);arrange(s);const seat=s.players[0].seat;
    const rs=await db.batch([db.prepare("UPDATE users SET wf_room=?,wf_locked=1,area='werewolf',seat='',action='',x=?,z=?,facing=?,position_at=? WHERE id=? AND wf_room IS NULL AND jailed_until<=?").bind(id,seat.x,seat.z,seat.facing,now,me.id,now),db.prepare('INSERT INTO wf_rooms(id,title,state,nonce,updated) SELECT ?,?,?,?,? WHERE changes()>0').bind(id,title,JSON.stringify(s),crypto.randomUUID(),now)]);
    if(!changes(rs[0]))return answer({error:'Bạn vừa vào phòng khác. Tải lại bảng Ma Sói.'},409);
    return answer({room:projectWolfRoom({id,title},s,me.id,now)});

@@ -80,14 +80,14 @@ export function buildLandscape({stage,scene,locations,block}) {
  function stall(x,z,color){for(const ox of [-2.4,2.4])for(const oz of [-1.6,1.6])box(x+ox,2,z+oz,.15,4,.15,0x8e6b44);box(x,1.15,z,5.5,2.1,2.8,0xb48350);box(x,2.26,z,5.8,.18,3.1,0xdbc19a);for(let i=0;i<6;i++){const awning=box(x-2.5+i,4,z,1,.12,4.6,i%2?0xf0dfb5:color);awning.rotation.x=-.12;box(x-2.5+i,3.65,z+2.2,1,.5,.1,i%2?0xf0dfb5:color);}for(let i=0;i<6;i++)instance('flower',i%2?0xd3aa5b:0x8dad5d,x-2+i*.8,2.55,z,.35,.3,.35);block(x,z,5.8,3.5);}
  stall(-17,33,0xb96f50);stall(15,-9,0x799179);
  for(const [x,z,color]of [[-17,30.6,0xb47746],[15,-11.4,0x658779]]){cyl(x,1.35,z,.5,.65,1.6,color);ball(x,2.5,z,.48,0xe8c79d);const hat=cyl(x,2.95,z,.7,.7,.08,0xccad70);cyl(x,3.05,z,.32,.4,.2,0xc8a66a);for(const side of [-1,1])ball(x+side*.48,2.1,z+.5,.15,0xe5bf8e);}
- textSign('GÓC TRÀ THẢO ĐẬU',-17,3.15,35.35,.7);textSign('QUẦY QUÀ NHỎ',15,3.15,-6.65,.7);
+ textSign('GÓC TRÀ ĐỊA NGỤC',-17,3.15,35.35,.7);textSign('QUẦY QUÀ NHỎ',15,3.15,-6.65,.7);
  // Lantern-lined lanes and garlands overhead, rather than empty stretches of grass.
  function post(x,z){box(x,2.7,z,.18,5.4,.18,0x66533b);box(x+.5,5.3,z,1.2,.15,.15,0x66533b);const lamp=mesh(geo('SphereGeometry',[.38,12,10]),mat(0xf2b971,{emissive:0xffa04b,emissiveIntensity:.7}),x+1,4.75,z);lamp.scale.y=1.3;cyl(x+1,5.1,z,.16,.16,.1,0x8b6337);}
  for(const z of [-22,-7,12,31,66])for(const x of [-8.2,8.2])post(x,z);
  for(const z of [-11,19,68]){for(const x of [-8,8])box(x,3.5,z,.16,7,.16,0x8c764e);const points=[];for(let i=0;i<=20;i++){const x=-8+i*.8;points.push(new T.Vector3(x,6.6-Math.sin(i/20*Math.PI)*1.2,z));}const curve=new T.CatmullRomCurve3(points);mesh(new T.TubeGeometry(curve,24,.025,4,false),mat(0x665b40),0,0,0);for(let i=0;i<7;i++){const x=-6+i*2,y=6.6-Math.sin((x+8)/16*Math.PI)*1.2;const lamp=mesh(geo('SphereGeometry',[.26,10,8]),mat(i%2?0xf5d9a0:0xdba36c,{emissive:0xeab05d,emissiveIntensity:.35}),x,y-.4,z);lamp.scale.y=1.35;}}
  // Gateway and continuous planting form a clear, lush village boundary.
  for(const x of [-7,7]){box(x,3.8,85,.7,7.6,.7,0x8f7851);flowers(x,85,1.5);}
- box(0,7.4,85,16,.6,1.5,0x785b3c);box(0,7.9,85,17,.4,2.4,0x9a784c);textSign('KHU SINH THÁI THẢO ĐẬU',0,6.4,85.8,1.5);
+ box(0,7.4,85,16,.6,1.5,0x785b3c);box(0,7.9,85,17,.4,2.4,0x9a784c);textSign('KHU SINH THÁI ĐỊA NGỤC',0,6.4,85.8,1.5);
  fence(-34,84,48);fence(34,84,48);fence(-91,3,152,Math.PI/2);fence(91,3,152,Math.PI/2);
  for(let i=0;i<130;i++){const a=i*2.399,rr=65+(i%6)*5,x=Math.cos(a)*rr,z=10+Math.sin(a)*rr;if(isLandDistrict(x,z)||locations.some(l=>Math.hypot(l.x-x,l.z-z)<15))continue;instance('leaf',[0x557b59,0x6d8e5c,0x7b995e][i%3],x,2+(i%3),z,2.8,3.6,2.8);instance('trunk',0x826849,x,.9,z,.24,2,.24);}
  const safe=(x,z)=>Math.abs(x)>8&&locations.every(l=>Math.abs(x-l.x)>14||Math.abs(z-l.z)>15)&&Math.abs(z+19)>6&&Math.abs(z-24)>6&&Math.abs(z-46)>6&&Math.abs(z-64)>6&&Math.hypot(x,z-1)>17;

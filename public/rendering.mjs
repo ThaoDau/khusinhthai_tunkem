@@ -35,7 +35,7 @@ export class AdaptiveQuality {
   let changed=false;
   if(fps<42&&this.ratio>.75){this.ratio=Math.max(.75,this.ratio-.125);changed=true;}
   else if(fps<32&&this.shadow){this.shadow=false;changed=true;}
-  else if(fps>56&&this.cooldown>12&&this.ratio<1.25){this.ratio=Math.min(1.25,this.ratio+.125);changed=true;}
+  else if(fps>56&&this.cooldown>12&&this.ratio<1){this.ratio=Math.min(1,this.ratio+.125);changed=true;}
   if(changed)this.cooldown=0;return changed;
  }
 }
